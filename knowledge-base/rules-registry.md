@@ -1,3 +1,14 @@
+---
+file_id: rules-registry
+kind: registry
+status: active
+schema_version: 1.0
+last_reviewed: 2026-06-01
+stale_after_days: 180
+owner: knowledge-writer-agent
+external_refs: []
+---
+
 # 靜態掃描規則登錄
 
 > 檔案路徑：knowledge-base/rules-registry.md
@@ -15,6 +26,7 @@ RULE-CON-XXX  → 並發與一致性相關
 RULE-SCH-XXX  → 排程任務相關
 RULE-BIZ-XXX  → 業務邏輯相關
 RULE-MON-XXX  → 監控告警相關
+RULE-SEC-1xx  → 財務安全 / 舞弊相關（taint source→sink，v2.0 新增）
 ```
 
 ---
@@ -277,6 +289,107 @@ if (Boolean.FALSE.equals(isFirst)) {
 
 ---
 
+### RULE-CON-007：金流狀態躍遷必須用 CAS / 樂觀鎖
+
+**來源模式**：PAT-WF-001（workflow-state-machine-catalog.md）
+**嚴重等級**：CRITICAL · **引擎**：CodeQL / 人工
+
+**違規特徵**：
+```
+對訂單/提款/退款等金流實體呼叫 setStatus / 狀態寫入
+且 更新無 WHERE status=<expected>（CAS）或 version 樂觀鎖
+且 存在並發或重送可達路徑
+```
+
+**修復範例**：
+```java
+int updated = orderMapper.casStatus(orderId, PENDING, SETTLING); // WHERE status='PENDING'
+if (updated == 0) throw new InvalidStatusException(); // 已被他人躍遷，拒絕
+```
+
+**對應不變量**：INV-ST-05（狀態單調）、INV-T-02（冪等）
+
+---
+
+## 財務安全/舞弊規則（v2.0 · taint source→sink 驅動）
+
+> 對應 `financial-security-patterns.md` 的 PAT-SEC-1xx。引擎以 CodeQL / Semgrep 的 **taint tracking** 為主：
+> 定義 source（請求 / MQ / 外部 API）、sink（資金操作 / 動態 SQL）、sanitizer（歸屬 / 數值域 / 授權 / 簽章 / 原子性），
+> 任一 source→sink 路徑缺對應 sanitizer 即報。
+
+### RULE-FIN-006：多資產精度禁止硬編碼 scale
+**來源模式**：PAT-FIN-005 · **嚴重等級**：CRITICAL · **引擎**：CodeQL
+```
+setScale(<常數>, ...) 出現在金額計算路徑
+且 scale 非來自資產中繼資料（assetMeta.getScale / coinConfig）
+```
+**對應不變量**：INV-TXN-02
+
+### RULE-FIN-007：分配/拆分後必須校驗總和守恆
+**來源模式**：PAT-FIN-006 · **嚴重等級**：CRITICAL · **引擎**：人工 + 不變量
+```
+迴圈內對 total 依比例分配並逐項 setScale 入帳
+且 迴圈後無「Σ各方 == total」斷言或殘差歸位
+```
+**對應不變量**：INV-TXN-05 / INV-ST-03
+
+### RULE-FIN-008：時間戳單位與時區一致性
+**來源模式**：PAT-FIN-007 · **嚴重等級**：MAJOR · **引擎**：Semgrep
+```
+裸 long 時間戳跨方法傳遞（ms/s 不明）
+或 用 LocalDate.now() / 系統預設時區計算結算日
+```
+
+### RULE-FIN-009：long 金額溢位防護
+**來源模式**：PAT-FIN-008 · **嚴重等級**：MAJOR · **引擎**：Semgrep
+```
+long 型金額欄位直接用 * 或 += 聚合
+且 未用 Math.multiplyExact / Math.addExact / BigInteger / BigDecimal
+```
+
+### RULE-SEC-101～114（taint 規則一覽）
+
+| 規則 | 對應 Pattern | 規則重點 | 引擎 | 信心 |
+|------|-------------|---------|------|------|
+| RULE-SEC-101 | PAT-SEC-101 | 資金 sink 的 id 參數缺帳戶歸屬校驗（IDOR） | CodeQL taint | 中 |
+| RULE-SEC-102 | PAT-SEC-102 | 金額參數缺 signum>0 / 上限 / scale 校驗 | Semgrep | 中 |
+| RULE-SEC-103 | PAT-SEC-103 | 餘額 check-then-act 跨非原子邊界（TOCTOU） | CodeQL | 中 |
+| RULE-SEC-104 | PAT-SEC-104 | 回調入帳缺簽章驗證 / 我方金額比對 | Semgrep | 中 |
+| RULE-SEC-105 | PAT-SEC-105 | 價格來源缺多源 / 時效 / 偏離校驗 | 人工 + 不變量 | 低 |
+| RULE-SEC-106 | PAT-SEC-106 | 請求直接綁定持久化實體（mass assignment） | CodeQL | 中 |
+| RULE-SEC-107 | PAT-SEC-107 | 敏感操作缺 nonce / 時間窗（重放） | Semgrep | 中 |
+| RULE-SEC-108 | PAT-SEC-108 | 高權限調帳缺 maker-checker 雙人覆核 | 人工 | 低 |
+| RULE-SEC-109 | PAT-SEC-109 | 動態 SQL 注入（${} / 字串拼接 SQL） | CodeQL taint | 高 |
+| RULE-SEC-110 | PAT-SEC-110 | 資金變動缺 append-only 審計 | 人工 + 不變量 | 低 |
+| RULE-SEC-111 | PAT-SEC-111 | 敏感欄位（卡號 / CVV / 餘額）寫入日誌 / 回應 | Semgrep | 中 |
+| RULE-SEC-112 | PAT-SEC-112 | 金流端點缺速率 / velocity 限制 | 人工 | 低 |
+| RULE-SEC-113 | PAT-SEC-113 | 優惠疊加缺互斥 / 上限 / 一次性 / 退款連動 | 人工 | 低 |
+| RULE-SEC-114 | PAT-SEC-114 | 冪等鍵低熵 / 可預測 | Semgrep | 中 |
+
+> 註：原 RULE-SEC-001～008（見 `oss-debug-security-loop.md`）是「工具能力」對應；此處 RULE-SEC-101～114 是「金融舞弊模式」對應，兩者不衝突。
+
+---
+
+## 偵測效能度量（Detection Metrics）
+
+> 併入自 detection-metrics（依三模型建議，不獨立成檔）。量化驅動 RECYCLE：沒有度量就無法知道進化是否真的有效。
+
+| 指標 | 定義 | 目標 | 來源 |
+|------|------|------|------|
+| **Precision（精確率）** | confirmed 真陽 / 所有報出的 finding | ≥ 0.8 | finding-evidence-standard 的 confirmed vs suppressed |
+| **Recall（召回率）** | 抓到的真漏洞 / 實際存在（以注入漏洞/事後回填估） | 持續上升 | attack-regression-corpus + 事後檢視 |
+| **False-Positive Rate** | suppressed / 所有 finding | ≤ 0.2 | ai-scan-false-positive-patterns 累計 |
+| **MTTD** | 漏洞引入 → 偵測的時間 | 越短越好 | git blame vs detect 時間 |
+| **Escaped-Defect Rate** | 上線後才發現 / 總漏洞 | 趨近 0 | 事後檢視 |
+| **規則命中與攔截** | 每條 RULE 觸發次數 / 攔截真 bug 數 | 見下表 | 健康度追蹤表 |
+| **回歸覆蓋** | attack-regression-corpus 條目數 / confirmed 漏洞數 | = 1.0 | corpus |
+
+**RECYCLE 量化準則**：每輪進化後比較 Precision/Recall/FP-Rate 趨勢；若新規則使 FP-Rate 上升而 Recall 未升 → 規則需調校或降為 candidate。
+
+**ARO 供給**：本表的「端點呼叫量級 / 規則命中頻率」供 [[severity-loss-model]] 計算期望資損的 ARO 因子。
+
+---
+
 ## 規則健康度追蹤
 
 | 規則代碼 | 規則摘要 | 最後觸發 | 觸發次數 | 攔截 Bug | 狀態 |
@@ -289,7 +402,27 @@ if (Boolean.FALSE.equals(isFirst)) {
 | RULE-CON-004 | 批量讀錢包後更新需行鎖或樂觀鎖 | SettlementFlow.java | 1 | 1 | 🆕 就緒 |
 | RULE-CON-005 | Retry 場景狀態修改必須冪等 | SettlementFlow.java | 1 | 1 | 🆕 就緒 |
 | RULE-CON-006 | 批次 Listener 每筆需獨立冪等鍵 | SettlementFlow.java | 1 | 1 | 🆕 就緒 |
+| RULE-CON-007 | 金流狀態躍遷必須用 CAS/樂觀鎖 | — | 0 | 0 | 🆕 就緒 |
 | RULE-BIZ-001 | 結算前必須通過業務合理性校驗 | — | 0 | 0 | 🟢 就緒 |
 | RULE-BIZ-002 | 外部 API 失敗禁止靜默返回預設值 | SettlementFlow.java | 1 | 1 | 🆕 就緒 |
+| RULE-FIN-006 | 多資產精度禁止硬編碼 scale | — | 0 | 0 | 🆕 就緒 |
+| RULE-FIN-007 | 分配後總和守恆校驗 | — | 0 | 0 | 🆕 就緒 |
+| RULE-FIN-008 | 時間戳單位 / 時區一致性 | — | 0 | 0 | 🆕 就緒 |
+| RULE-FIN-009 | long 金額溢位防護 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-101 | 資金操作帳戶歸屬校驗（IDOR） | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-102 | 金額參數正負 / 上限 / scale 校驗 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-103 | 餘額 check-then-act 原子性（TOCTOU） | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-104 | 回調簽章 + 我方金額比對 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-105 | 價格多源 / 時效 / 偏離校驗 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-106 | 禁止 mass assignment 綁定金額/狀態 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-107 | 敏感操作 nonce / 時間窗防重放 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-108 | 高權限調帳 maker-checker | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-109 | 動態 SQL 注入防護 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-110 | 資金變動 append-only 審計 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-111 | 敏感欄位禁入日誌 / 回應 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-112 | 金流端點速率 / velocity 限制 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-113 | 優惠互斥 / 上限 / 一次性 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SEC-114 | 冪等鍵高熵不可預測 | — | 0 | 0 | 🆕 就緒 |
 
-> 最後更新：SettlementFlow.java 掃描後（v1.1）· 新增 4 條規則 · 累計攔截 Bug：5 個
+> 最後更新：v2.0 財務安全進化（2026-06）· 新增 RULE-FIN-006~009 + RULE-SEC-101~114（共 18 條）· 累計攔截 Bug：5 個
+> 規則分類擴充：新增 `RULE-SEC-1xx`（財務舞弊 taint 規則），與 `financial-security-patterns.md`、`financial-invariants.md` 三位一體。

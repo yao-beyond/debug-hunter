@@ -1,3 +1,14 @@
+---
+file_id: reproduce-scenarios
+kind: reference
+status: active
+schema_version: 1.0
+last_reviewed: 2026-06-01
+stale_after_days: 180
+owner: reproducer-agent
+external_refs: []
+---
+
 # 復現情境沉澱庫
 
 > 檔案路徑：knowledge-base/reproduce-scenarios.md

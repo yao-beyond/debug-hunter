@@ -1,3 +1,14 @@
+---
+file_id: settlement-checklist
+kind: reference
+status: active
+schema_version: 1.0
+last_reviewed: 2026-06-01
+stale_after_days: 180
+owner: knowledge-writer-agent
+external_refs: []
+---
+
 # 結算系統專屬檢查清單
 
 > 適用服務：settlement-service
@@ -95,3 +106,52 @@
 - 第 11~13 項（冪等性）：若有 Kafka 相關代碼則必須通過
 - 第 14~17 項（守衛）：必須 **全部通過**，否則 Block PR
 - 第 18~21 項（日誌）：建議通過，不通過需說明原因
+
+---
+
+## 七、正面安全編碼基線（Secure-Coding Baseline）
+
+> 併入自 secure-coding-baseline（依三模型建議，不獨立成檔）。前六節是「該檢查什麼」，本節是「正確該怎麼寫」的權威範本，供 FIX 階段直接參照、降低修復引入新漏洞。
+
+### 金額與精度
+```java
+private BigDecimal amount;                                   // 不用 double/float
+int scale = assetMeta.getScale(coinId);                     // 不硬編碼 scale
+BigDecimal r = a.multiply(b).setScale(scale, assetMeta.getRounding(coinId));
+if (a.compareTo(b) == 0) { }                                // 不用 equals
+```
+
+### 授權與歸屬（連 authorization-ownership-matrix）
+```java
+Long me = securityContext.getUserId();                      // 錨定認證主體
+Account acc = accountMapper.selectByIdAndUserId(accountId, me); // DB 層強制歸屬
+if (acc == null) throw new AccessDeniedException();
+```
+
+### 數值域（連 value-authority-sanitizer-registry）
+```java
+if (amount == null || amount.signum() <= 0) throw new ValidationException();
+if (amount.compareTo(asset.getMaxSingleTxn()) > 0) throw new ValidationException();
+BigDecimal payable = pricingService.recompute(order);       // 金額後端重算，不信前端
+```
+
+### 原子性 / 冪等 / 狀態
+```java
+int n = walletMapper.debitIfEnough(accountId, amount);      // 原子扣款，非 check-then-act
+int u = orderMapper.casStatus(id, PENDING, SETTLING);       // CAS 狀態躍遷
+redis.opsForValue().setIfAbsent("idem:"+userId+":"+reqId, "1", TTL); // 高熵冪等鍵
+```
+
+### 外部資料與回調
+```java
+if (!signatureVerifier.verify(rawBody, sig)) throw new SecurityException(); // 回調驗簽
+if (resp.getCode() != 1) throw new PriceApiException();     // 外部失敗拋例外，不靜默預設值
+```
+
+### 不可記錄 / 不可回傳
+```java
+log.info("pay card={}", mask(card));                        // 遮罩；CVV 永不記
+return toDto(account);                                       // 回 DTO 白名單，不回 entity
+```
+
+> **基線即規則**：本節每條都對應一條 RULE-*；違反基線 = 觸發規則。修復後務必讓對應 RULE 由「可觸發」轉「不可觸發」。

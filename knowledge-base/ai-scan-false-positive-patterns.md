@@ -1,3 +1,14 @@
+---
+file_id: ai-scan-false-positive-patterns
+kind: pattern-catalog
+status: active
+schema_version: 1.0
+last_reviewed: 2026-05-18
+stale_after_days: 180
+owner: knowledge-writer-agent
+external_refs: []
+---
+
 # AI 安全掃描誤報模式知識庫
 
 > 檔案路徑：knowledge-base/ai-scan-false-positive-patterns.md

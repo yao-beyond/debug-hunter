@@ -1,3 +1,14 @@
+---
+file_id: oss-debug-security-loop
+kind: reference
+status: active
+schema_version: 1.0
+last_reviewed: 2026-05-18
+stale_after_days: 180
+owner: knowledge-writer-agent
+external_refs: ["Trivy", "Semgrep", "CodeQL", "OSV-Scanner", "Gitleaks", "ZAP", "Nuclei", "Jazzer"]
+---
+
 # GitHub 高星 Debug / 漏洞閉環整合清單
 
 > 適用：Java / SpringBoot / 金融交易系統
@@ -188,3 +199,21 @@ RECYCLE 階段新增四種回寫：
 - `google/osv-scanner` — https://github.com/google/osv-scanner
 - `ossf/scorecard` — https://github.com/ossf/scorecard
 - `CodeIntelligenceTesting/jazzer` — https://github.com/CodeIntelligenceTesting/jazzer
+
+---
+
+## 6. 偵測指標與有效性衡量 (Detection Metrics)
+
+> 用於衡量整個 Debug-Hunter 框架的表現。
+
+| 指標名稱 | 定義 | 目標值 |
+| :--- | :--- | :--- |
+| **MTTD (Mean Time to Detect)** | 從代碼提交到發現 Finding 的平均時間 | < 10 分鐘 |
+| **MTTR (Mean Time to Reproduce)** | 從 Finding 發現到生成有效 PoC 的平均時間 | < 30 分鐘 |
+| **Precision (精確率)** | 確認為漏洞的 Finding / 總 Finding 數 | > 85% |
+| **Recall (召回率)** | 發現的已知 Bug 數 / 總已知 Bug 數 | > 95% |
+| **FP Rate (誤報率)** | 誤報數 / 總 Finding 數 | < 15% |
+
+**持續改進循環 (Feedback Loop)**:
+1. 每日分析誤報 (False Positives)，將其提取為 `ai-scan-false-positive-patterns.md`。
+2. 每月更新 `financial-bug-patterns.md`，納入新生業務場景。

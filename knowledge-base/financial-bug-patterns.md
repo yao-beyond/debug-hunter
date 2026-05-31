@@ -1,3 +1,14 @@
+---
+file_id: financial-bug-patterns
+kind: pattern-catalog
+status: active
+schema_version: 1.0
+last_reviewed: 2026-06-01
+stale_after_days: 180
+owner: knowledge-writer-agent
+external_refs: ["CWE-681", "CWE-190", "CWE-362"]
+---
+
 # 金融 Bug 模式知識庫
 
 > 檔案路徑：knowledge-base/financial-bug-patterns.md
@@ -24,6 +35,10 @@
 | PAT-FIN-002 | double/float 處理金額 | P0 | 靜態分析 | — |
 | PAT-FIN-003 | BigDecimal.equals() 比較 | P1 | 靜態分析 | — |
 | PAT-FIN-004 | divide() 未指定 RoundingMode | P1 | 靜態分析 | — |
+| PAT-FIN-005 | 多資產精度硬編碼 scale | P0 | 設計審查 | — |
+| PAT-FIN-006 | 分配/拆分捨入殘差未處理（salami） | P0 | 業務分析 | — |
+| PAT-FIN-007 | 時間戳單位混淆（ms/s）與時區邊界 | P1 | 設計審查 | — |
+| PAT-FIN-008 | 金額以最小單位存 long 的整數溢位 | P1 | 設計審查 | — |
 | PAT-CON-001 | Kafka 消費者缺乏冪等保護 | P0 | 壓力測試 · SettlementFlow.java | 2 🆕 |
 | PAT-CON-002 | @Transactional 靜默失效 | P0 | 代碼審查 | — |
 | PAT-CON-003 | 分散式鎖 TTL 設計缺陷 | P1 | 事後檢視 | — |
@@ -401,6 +416,126 @@ public void markError() {
 **來源事件**：SettlementFlow.java 掃描 BUG-EXAMPLE-104
 **新增日期**：2024-01
 **新增人員**：Knowledge Writer Agent
+
+---
+
+## PAT-FIN-005：多資產精度硬編碼 scale
+
+**描述**：
+不同資產的小數精度不同（BTC 8 位、USDT 6 位、JPY 0 位、TWD 0 位）。程式中硬編碼 `setScale(8, ...)` 對所有資產一視同仁，導致：對 JPY 產生不存在的小數、對需要 8 位的幣別被截斷、跨幣別比較與加總出錯。settlement-checklist A 類「統一 scale 8 位」本身在多資產系統就是個錯誤假設。
+
+**觸發特徵**：
+```java
+// 特徵：scale 寫死，未依資產定義
+BigDecimal profit = amount.multiply(rate).setScale(8, RoundingMode.HALF_DOWN); // ← 所有幣別都 8
+if (jpyAmount.scale() == 8) { ... } // ← JPY 不該有小數
+```
+
+**危害等級**：P0 — 跨幣別精度錯誤，累積資損且難對帳
+
+**修復策略**：scale 由資產中繼資料決定
+```java
+int scale = assetMeta.getScale(coinId);            // 由資產定義取得
+BigDecimal profit = amount.multiply(rate).setScale(scale, assetMeta.getRounding(coinId));
+// 入庫前校驗：金額 scale 不得超過資產定義
+if (amount.stripTrailingZeros().scale() > scale)
+    throw new ValidationException("金額精度超出資產 " + coinId + " 定義");
+```
+
+**反哺規則**：RULE-FIN-006（對應不變量 INV-TXN-02）
+
+---
+
+## PAT-FIN-006：分配/拆分捨入殘差未處理（salami slicing）
+
+**描述**：
+把一筆總額分配給多方（分潤、拆單、按比例退款）時，各方 `總額 × 比例` 個別捨入後，加總**不等於**原總額，產生殘差（少了/多了 1 個最小單位）。殘差若無明確歸屬，長期累積即「salami slicing」吞錢或造錢，且違反守恆。
+
+**觸發特徵**：
+```java
+// 特徵：逐項捨入後未校驗總和 = 原總額
+for (Party p : parties) {
+    BigDecimal share = total.multiply(p.getRatio())
+        .setScale(scale, RoundingMode.HALF_UP);    // ← 各自捨入
+    credit(p, share);                              // Σshare 可能 ≠ total
+}
+```
+
+**危害等級**：P0 — 累積資損/造錢，違反 INV-TXN-05 與 INV-ST-03
+
+**修復策略**：最大餘額法 / 殘差歸位（last-takes-remainder）
+```java
+BigDecimal allocated = ZERO;
+for (int i = 0; i < parties.size(); i++) {
+    BigDecimal share = (i == parties.size() - 1)
+        ? total.subtract(allocated)                       // 最後一方吃殘差，保證守恆
+        : total.multiply(parties.get(i).getRatio()).setScale(scale, HALF_DOWN);
+    allocated = allocated.add(share);
+    credit(parties.get(i), share);
+}
+assert allocated.compareTo(total) == 0;                   // INV-TXN-05
+```
+
+**推廣原則**：任何「一拆多」或「多合一」的金額運算，運算後必須斷言總和守恆，殘差需有明確且一致的歸屬規則。
+
+**反哺規則**：RULE-FIN-007
+
+---
+
+## PAT-FIN-007：時間戳單位混淆（ms/s）與時區邊界
+
+**描述**：
+結算依賴時間戳判定開盤/收盤、T+1、利息計息日。秒（10 位）與毫秒（13 位）混用，或用系統預設時區處理跨日邊界，導致取錯價格區間、結算日歸屬錯誤、DST 當天計息錯誤。PAT-BIZ-003 的 `fetchQuote(code, ts)` 即潛在風險點。
+
+**觸發特徵**：
+```java
+// 特徵 1：ms/s 混用
+long ts = System.currentTimeMillis();          // 13 位 ms
+priceApi.getOpenPrice(code, ts);               // ← API 預期秒？單位未明確
+new Date(epochSeconds);                         // ← 把秒當毫秒
+
+// 特徵 2：用預設時區算結算日
+LocalDate settleDate = LocalDate.now();        // ← 依伺服器時區，跨日邊界錯
+```
+
+**危害等級**：P1 — 取錯價格區間 / 結算日歸屬錯誤，定向可被利用
+
+**修復策略**：單位顯式化 + 固定結算時區
+```java
+Instant ts = Instant.now();                                  // 型別即語意，避免裸 long
+long epochMillis = ts.toEpochMilli();
+// 結算日固定以交易所/業務時區計算
+LocalDate settleDate = ts.atZone(EXCHANGE_ZONE).toLocalDate();
+```
+
+**反哺規則**：RULE-FIN-008
+
+---
+
+## PAT-FIN-008：金額以最小單位存 long 的整數溢位
+
+**描述**：
+為效能改用 `long`（聰）儲存金額。大額聚合（總資產、平台總額、批次加總）可能超過 `Long.MAX_VALUE`，或乘法中間值溢位，靜默回繞成負/錯值。
+
+**觸發特徵**：
+```java
+// 特徵：long 金額直接相乘/累加，無溢位防護
+long total = 0;
+for (long amt : amounts) total += amt;          // ← 大量累加可能溢位
+long fee = amount * rateBps / 10000;            // ← amount * rateBps 中間值溢位
+```
+
+**危害等級**：P1 — 大額/聚合場景金額回繞，極端但破壞性高
+
+**修復策略**：聚合與乘法用 `BigInteger`/`Math.*Exact`，或全程 BigDecimal
+```java
+long fee = Math.multiplyExact(amount, rateBps) / 10000;   // 溢位即拋例外
+// 聚合用 BigInteger 或 BigDecimal
+BigInteger total = amounts.stream().map(BigInteger::valueOf)
+    .reduce(BigInteger.ZERO, BigInteger::add);
+```
+
+**反哺規則**：RULE-FIN-009
 
 ---
 
