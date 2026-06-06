@@ -220,4 +220,5 @@ javac FloatMoneyDemo.java && java FloatMoneyDemo
 - **PoC「成功」的定義 = 不變量被違反**，不是「丟例外」——這是安全驗收與功能測試的關鍵差異。
 - 每個 demo 都附**負面對照**（正常流程應成功 / 冪等），確保修復未誤殺正常路徑，呼應 `finding-evidence-standard.md` 的降誤報精神。
 - 真實系統請改用 Spring `@RestController` + MyBatis；邏輯與這些 demo 等價。
-- 9 個 demo 都在 CI（`.github/workflows/ci.yml`）中每次 push 自動編譯執行。
+- 23 個 demo 都在 CI（`.github/workflows/ci.yml`）中每次 push 自動編譯執行。
+- 完整 Pattern → demo/規則 對照矩陣見 [`../../knowledge-base/DEMO-COVERAGE.md`](../../knowledge-base/DEMO-COVERAGE.md)。Demo 11–23（金額竄改、maker-checker、審計、velocity、優惠套利、冪等鍵、equals、divide、scale、殘差、時間戳、溢位、業務守衛）結構與前 10 個相同：DETECT → REPRODUCE → VERIFY，PoC 判據＝違反不變量或精確性。

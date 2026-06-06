@@ -97,35 +97,20 @@ semgrep --test rules/semgrep/
 ```
 
 ### 4. 跑端到端 demo（看閉環如何運作）
-10 個純 JDK 攻擊/競態/精度閉環 demo，每個都印出 DETECT → REPRODUCE(PoC) → VERIFY，PoC 成功判據＝違反某條金融不變量或精確性（CI 每次自動編譯執行）：
+**23 個純 JDK 閉環 demo**，每個印出 DETECT → REPRODUCE(PoC) → VERIFY，PoC 成功判據＝違反某條金融不變量或精確性（CI 每次自動編譯執行）：
 
-| Demo | 漏洞 | 面向 | 判據 |
-|------|------|------|------|
-| `IdorDemo` | 越權動帳 (PAT-SEC-101) | 內部授權 | INV-ST-01 |
-| `PaymentCallbackDemo` | 偽造支付回調 (PAT-SEC-104) | 外部信任 | INV-T-03 |
-| `OracleManipulationDemo` | 預言機操縱 / 陳舊價 (PAT-SEC-105) | 資料完整性 | INV-ST-03 |
-| `DoubleSpendDemo` | TOCTOU 雙花 (PAT-SEC-103) | 並發原子性 | INV-ST-01 |
-| `MassAssignmentDemo` | 屬性越權改餘額 (PAT-SEC-106) | 欄位白名單 | INV-ST-02/05 |
-| `ReplayDemo` | 請求重放 (PAT-SEC-107) | 時間序列 | INV-T-04 |
-| `SchedulerRaceDemo` | 排程多 Worker 資料競爭 (PAT-SCH-001) | 排程分片/冪等 | INV-T-02 |
-| `TradingWindowRaceDemo` | 委託時間窗口競態 (PAT-BIZ-001) | 業務時間窗口 | INV-T-03/ST-05 |
-| `LockTtlDemo` | 分散式鎖 TTL 缺陷 (PAT-CON-003) | 鎖互斥 | INV-T-02 |
-| `FloatMoneyDemo` | double/float 處理金額 (PAT-FIN-002) | 數值精度 | 精確一致 |
+| 類別 | demos |
+|------|-------|
+| 安全攻擊 (PAT-SEC) | Idor、AmountTamper、DoubleSpend、PaymentCallback、OracleManipulation、MassAssignment、Replay、MakerChecker、AuditTrail、Velocity、PromoAbuse、IdempotencyKey |
+| 並發/排程 (PAT-CON/SCH) | DoubleSpend、SchedulerRace、LockTtl |
+| 精度/業務 (PAT-FIN/BIZ) | FloatMoney、BigDecimalEquals、DivideRounding、AssetScale、AllocationResidue、TimestampUnit、LongOverflow、SettlementGuard、TradingWindowRace |
 
 ```bash
 cd examples/vulnerable-settlement
-javac IdorDemo.java               && java IdorDemo               # 越權動帳
-javac PaymentCallbackDemo.java    && java PaymentCallbackDemo    # 偽造回調
-javac OracleManipulationDemo.java && java OracleManipulationDemo # 預言機操縱
-javac DoubleSpendDemo.java        && java DoubleSpendDemo        # TOCTOU 雙花
-javac MassAssignmentDemo.java     && java MassAssignmentDemo     # mass assignment
-javac ReplayDemo.java             && java ReplayDemo             # 請求重放
-javac SchedulerRaceDemo.java      && java SchedulerRaceDemo      # 排程資料競爭
-javac TradingWindowRaceDemo.java  && java TradingWindowRaceDemo  # 委託窗口競態
-javac LockTtlDemo.java            && java LockTtlDemo            # 分散式鎖 TTL
-javac FloatMoneyDemo.java         && java FloatMoneyDemo         # double/float 金額
-# exit 0 = 閉環成立；各 demo 說明見 examples/vulnerable-settlement/README.md
+for f in *Demo.java; do javac "$f" && java "${f%.java}"; done   # 全部跑一遍，exit 0 = 閉環成立
 ```
+
+> **完整 Pattern → demo/規則 對照矩陣見 [DEMO-COVERAGE.md](knowledge-base/DEMO-COVERAGE.md)**：30 條 PAT 全有佐證——23 條可執行 demo、3 條由 Semgrep/CodeQL 靜態規則涵蓋、4 條由 `reproduce-scenarios` 的 SCENE 涵蓋。各 demo 說明見 [examples README](examples/vulnerable-settlement/README.md)。
 
 ### 5. 讓知識庫驅動 AI 診斷
 當 AI（或你）發現異常時，引導它對照知識庫定性：

@@ -97,35 +97,20 @@ semgrep --test rules/semgrep/
 ```
 
 ### 4. Run the end-to-end demos (see the loop in action)
-10 pure-JDK attack/race/precision closed-loop demos. Each prints DETECT → REPRODUCE(PoC) → VERIFY, where "PoC success" means a financial invariant (or numeric exactness) is violated (all run in CI on every push):
+**23 pure-JDK closed-loop demos.** Each prints DETECT → REPRODUCE(PoC) → VERIFY, where "PoC success" means a financial invariant (or numeric exactness) is violated (all run in CI on every push):
 
-| Demo | Vulnerability | Dimension | Oracle |
-|------|---------------|-----------|--------|
-| `IdorDemo` | Privilege fund withdrawal (PAT-SEC-101) | internal authz | INV-ST-01 |
-| `PaymentCallbackDemo` | Forged payment callback (PAT-SEC-104) | external trust | INV-T-03 |
-| `OracleManipulationDemo` | Oracle manipulation / stale price (PAT-SEC-105) | data integrity | INV-ST-03 |
-| `DoubleSpendDemo` | TOCTOU double-spend (PAT-SEC-103) | concurrency atomicity | INV-ST-01 |
-| `MassAssignmentDemo` | Mass-assignment balance tamper (PAT-SEC-106) | field whitelist | INV-ST-02/05 |
-| `ReplayDemo` | Request replay (PAT-SEC-107) | time series | INV-T-04 |
-| `SchedulerRaceDemo` | Scheduler multi-worker data race (PAT-SCH-001) | sharding/idempotency | INV-T-02 |
-| `TradingWindowRaceDemo` | Order time-window race (PAT-BIZ-001) | business time window | INV-T-03/ST-05 |
-| `LockTtlDemo` | Distributed-lock TTL defect (PAT-CON-003) | lock mutual-exclusion | INV-T-02 |
-| `FloatMoneyDemo` | double/float for money (PAT-FIN-002) | numeric precision | exactness |
+| Category | demos |
+|----------|-------|
+| Security attacks (PAT-SEC) | Idor, AmountTamper, DoubleSpend, PaymentCallback, OracleManipulation, MassAssignment, Replay, MakerChecker, AuditTrail, Velocity, PromoAbuse, IdempotencyKey |
+| Concurrency/scheduling (PAT-CON/SCH) | DoubleSpend, SchedulerRace, LockTtl |
+| Precision/business (PAT-FIN/BIZ) | FloatMoney, BigDecimalEquals, DivideRounding, AssetScale, AllocationResidue, TimestampUnit, LongOverflow, SettlementGuard, TradingWindowRace |
 
 ```bash
 cd examples/vulnerable-settlement
-javac IdorDemo.java               && java IdorDemo
-javac PaymentCallbackDemo.java    && java PaymentCallbackDemo
-javac OracleManipulationDemo.java && java OracleManipulationDemo
-javac DoubleSpendDemo.java        && java DoubleSpendDemo
-javac MassAssignmentDemo.java     && java MassAssignmentDemo
-javac ReplayDemo.java             && java ReplayDemo
-javac SchedulerRaceDemo.java      && java SchedulerRaceDemo
-javac TradingWindowRaceDemo.java  && java TradingWindowRaceDemo
-javac LockTtlDemo.java            && java LockTtlDemo
-javac FloatMoneyDemo.java         && java FloatMoneyDemo
-# exit 0 = loop holds; per-demo notes in examples/vulnerable-settlement/README.md
+for f in *Demo.java; do javac "$f" && java "${f%.java}"; done   # run all; exit 0 = loop holds
 ```
+
+> **Full pattern → demo/rule matrix: [DEMO-COVERAGE.md](knowledge-base/DEMO-COVERAGE.md)** — all 30 PATs are evidenced: 23 runnable demos, 3 covered by Semgrep/CodeQL static rules, 4 covered by `reproduce-scenarios` SCENEs. Per-demo notes: [examples README](examples/vulnerable-settlement/README.md).
 
 ### 5. Let the knowledge base drive AI diagnosis
 When you (or the AI) hit an anomaly, anchor the judgment to the knowledge base:

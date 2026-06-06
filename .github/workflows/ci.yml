@@ -42,3 +42,16 @@ jobs:
           javac TradingWindowRaceDemo.java && java TradingWindowRaceDemo
           javac LockTtlDemo.java && java LockTtlDemo
           javac FloatMoneyDemo.java && java FloatMoneyDemo
+          javac BigDecimalEqualsDemo.java && java BigDecimalEqualsDemo
+          javac DivideRoundingDemo.java && java DivideRoundingDemo
+          javac AssetScaleDemo.java && java AssetScaleDemo
+          javac AllocationResidueDemo.java && java AllocationResidueDemo
+          javac TimestampUnitDemo.java && java TimestampUnitDemo
+          javac LongOverflowDemo.java && java LongOverflowDemo
+          javac SettlementGuardDemo.java && java SettlementGuardDemo
+          javac AmountTamperDemo.java && java AmountTamperDemo
+          javac MakerCheckerDemo.java && java MakerCheckerDemo
+          javac AuditTrailDemo.java && java AuditTrailDemo
+          javac VelocityDemo.java && java VelocityDemo
+          javac PromoAbuseDemo.java && java PromoAbuseDemo
+          javac IdempotencyKeyDemo.java && java IdempotencyKeyDemo

@@ -181,8 +181,9 @@ reproduce: ["送 amount=-100 轉帳；或超精度繞過上限"]
 oracle: ["INV-TXN-02 被違反（憑空造錢 / 繞過上限）"]
 fix_strategy: "伺服器端強制數值域校驗，金額一律後端重算"
 rule_ref: RULE-SEC-102
+poc_ref: examples/vulnerable-settlement/AmountTamperDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
@@ -571,8 +572,9 @@ reproduce: ["以單一 admin token 直接調帳"]
 oracle: ["動帳無第二人覆核且無審計可追溯（INV-T-01）"]
 fix_strategy: "maker-checker 雙人覆核 + 額度分級 + 審計"
 rule_ref: RULE-SEC-108
+poc_ref: examples/vulnerable-settlement/MakerCheckerDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
@@ -686,8 +688,9 @@ reproduce: ["動帳後查無審計紀錄 / 審計可被竄改"]
 oracle: ["INV-T-01 餘額 delta 無法追溯到唯一審計分錄"]
 fix_strategy: "每筆資金變動寫 append-only 審計"
 rule_ref: RULE-SEC-110
+poc_ref: examples/vulnerable-settlement/AuditTrailDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
@@ -794,8 +797,9 @@ reproduce: ["腳本高頻提款 / 暴力 OTP"]
 oracle: ["單位時間累計超出風控閾值未被攔"]
 fix_strategy: "速率限制 + velocity 規則 + 異常升級"
 rule_ref: RULE-SEC-112
+poc_ref: examples/vulnerable-settlement/VelocityDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
@@ -848,8 +852,9 @@ reproduce: ["疊多券至折後為負；先返現後退款薅羊毛"]
 oracle: ["群體性資損 / 折後為負（INV-TXN-05 殘差守恆破壞）"]
 fix_strategy: "互斥 + 上限 + 一次性 + 退款連動回收"
 rule_ref: RULE-SEC-113
+poc_ref: examples/vulnerable-settlement/PromoAbuseDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
@@ -902,8 +907,9 @@ reproduce: ["預測他人冪等鍵搶占/覆蓋其交易"]
 oracle: ["越權干擾他人交易或繞過防重（INV-T-02）"]
 fix_strategy: "高熵 requestId + 簽章綁定"
 rule_ref: RULE-SEC-114
+poc_ref: examples/vulnerable-settlement/IdempotencyKeyDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 

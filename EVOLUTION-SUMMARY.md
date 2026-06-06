@@ -61,20 +61,10 @@
 ### 可執行規則與 demo
 - `rules/semgrep/financial-security.yml` — RULE-SEC-101/102/106/109 + RULE-FIN-003 Semgrep 規則（`semgrep --test` 5/5 通過）
 - `rules/semgrep/financial-security.java` — pass/fail 測試 fixture
-- **10 個端到端閉環 demo**（純 JDK，CI 每次自動編譯執行，皆 exit 0）：
-  | Demo | 漏洞 | 面向 | 判據 |
-  |------|------|------|------|
-  | `IdorDemo` | 越權動帳 (PAT-SEC-101) | 內部授權 | INV-ST-01 |
-  | `PaymentCallbackDemo` | 偽造支付回調 (PAT-SEC-104) | 外部信任 | INV-T-03 |
-  | `OracleManipulationDemo` | 預言機操縱 / 陳舊價 (PAT-SEC-105) | 資料完整性 | INV-ST-03 |
-  | `DoubleSpendDemo` | TOCTOU 雙花 (PAT-SEC-103) | 並發原子性 | INV-ST-01 |
-  | `MassAssignmentDemo` | 屬性越權改餘額 (PAT-SEC-106) | 欄位白名單 | INV-ST-02/05 |
-  | `ReplayDemo` | 請求重放 (PAT-SEC-107) | 時間序列 | INV-T-04 |
-  | `SchedulerRaceDemo` | 排程多 Worker 資料競爭 (PAT-SCH-001) | 排程分片/冪等 | INV-T-02 |
-  | `TradingWindowRaceDemo` | 委託時間窗口競態 (PAT-BIZ-001) | 業務時間窗口 | INV-T-03/ST-05 |
-  | `LockTtlDemo` | 分散式鎖 TTL 缺陷 (PAT-CON-003) | 鎖互斥 | INV-T-02 |
-  | `FloatMoneyDemo` | double/float 處理金額 (PAT-FIN-002) | 數值精度 | 精確一致 |
-- `.github/workflows/ci.yml` — CI 跑 Semgrep 規則測試 + 9 個 demo
+- **23 個端到端閉環 demo**（純 JDK，CI 每次自動編譯執行，皆 exit 0）：涵蓋 30 條 PAT 中所有可執行的攻擊/競態/精度/業務漏洞。
+  完整 Pattern→demo/規則對照矩陣見 [`knowledge-base/DEMO-COVERAGE.md`](knowledge-base/DEMO-COVERAGE.md)：
+  **23 條 runnable demo + 3 條靜態規則涵蓋（SEC-109/111、CON-002）+ 4 條 SCENE 涵蓋（CON-001/004/005、BIZ-003）= 30 條全覆蓋**。
+- `.github/workflows/ci.yml` — CI 跑 Semgrep 規則測試 + 23 個 demo
 
 ### agents
 - `agents/threat-modeler.md`, `agents/security-fraud-detector.md`
@@ -114,8 +104,8 @@ for f in knowledge-base/*.md; do head -1 "$f" | grep -q '^---$' || echo "缺 fro
       `financial-security-patterns` PAT-SEC-101~114（14 條，taint 導向：sources/sinks/required_sanitizers/detect/oracle，demo-backed 附 poc_ref）
       + `financial-bug-patterns` PAT-FIN/CON/SCH/BIZ（16 條，correctness/concurrency/business：antipattern/detect/false_positive_checks/fix_strategy）；
       RULE/INV/MF/SCENE 交叉引用零斷鏈
-- [x] demo 擴充攻擊面 → **9 個 demo 涵蓋 PAT-SEC-101/103/104/105/106/107 + PAT-SCH-001 + PAT-BIZ-001 + PAT-CON-003（越權/雙花/偽造回調/預言機/屬性越權/重放/排程競爭/委託窗口/鎖TTL），全數實跑通過並納入 CI**
-- [x] 為 Semgrep 規則接 CI gate（push / PR 觸發）→ **`.github/workflows/ci.yml`，每次 push/PR 跑規則測試 + 9 個 demo**
+- [x] demo 全面覆蓋 → **23 個 runnable demo，涵蓋 30 條 PAT 中所有可執行者；其餘 3 條靜態規則涵蓋、4 條 SCENE 涵蓋（見 DEMO-COVERAGE.md）。每條 PAT 皆有可執行佐證**
+- [x] 為 Semgrep 規則接 CI gate（push / PR 觸發）→ **`.github/workflows/ci.yml`，每次 push/PR 跑規則測試 + 23 個 demo**
 - [ ] money-flow-map 以實際專案金流補齊（目前為範本骨架）
 - [x] 安裝 semgrep 後實跑 `--test` 驗證規則 fixture → **semgrep 1.144.0 `--test` 5/5 規則通過、0 失敗、exit 0；直接掃描確認 finding 全部命中 vuln 行、安全行零誤報**
 - [x] 統一測試/語料命名 → property test 用 `PBT-FIN-01~03`、回歸語料用 `CORP-001~007`，全庫零殘留舊命名
