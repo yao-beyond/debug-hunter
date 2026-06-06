@@ -14,7 +14,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
   <img src="https://img.shields.io/badge/Java-21-orange.svg" alt="Java 21"/>
   <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F.svg" alt="Spring Boot 3"/>
-  <img src="https://img.shields.io/badge/Semgrep-rules%205%2F5-1B87C9.svg" alt="Semgrep rules 5/5"/>
+  <img src="https://img.shields.io/badge/Semgrep-rules%207%2F7-1B87C9.svg" alt="Semgrep rules 7/7"/>
 </p>
 
 <p align="center"><b>正體中文</b> | <a href="README.en.md">English</a></p>
@@ -92,7 +92,7 @@ claude --agent agents/detector.md "靜態掃描 src/settlement"
 # 對你的原始碼掃描財務安全模式
 semgrep --config rules/semgrep/financial-security.yml src/
 
-# 驗證規則本身（pass/fail fixture，應為 5/5 通過）
+# 驗證規則本身（pass/fail fixture，應為 7/7 通過）
 semgrep --test rules/semgrep/
 ```
 

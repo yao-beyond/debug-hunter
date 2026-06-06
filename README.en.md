@@ -14,7 +14,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
   <img src="https://img.shields.io/badge/Java-21-orange.svg" alt="Java 21"/>
   <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F.svg" alt="Spring Boot 3"/>
-  <img src="https://img.shields.io/badge/Semgrep-rules%205%2F5-1B87C9.svg" alt="Semgrep rules 5/5"/>
+  <img src="https://img.shields.io/badge/Semgrep-rules%207%2F7-1B87C9.svg" alt="Semgrep rules 7/7"/>
 </p>
 
 <p align="center"><a href="README.md">正體中文</a> | <b>English</b></p>
@@ -92,7 +92,7 @@ claude --agent agents/detector.md "Static scan of src/settlement"
 # Scan your source for financial-security patterns
 semgrep --config rules/semgrep/financial-security.yml src/
 
-# Validate the rules themselves (pass/fail fixtures — should be 5/5)
+# Validate the rules themselves (pass/fail fixtures — should be 7/7)
 semgrep --test rules/semgrep/
 ```
 

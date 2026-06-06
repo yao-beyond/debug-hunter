@@ -104,3 +104,41 @@ rules:
       - metavariable-regex:
           metavariable: $F
           regex: (?i).*(amount|price|fee|profit|balance|rate|payout).*
+
+  # ---- RULE-SEC-111：敏感金融資料寫入日誌 ----
+  - id: sensitive-data-in-log
+    languages: [java]
+    severity: ERROR
+    metadata:
+      pattern: PAT-SEC-111
+      rule: RULE-SEC-111
+      cwe: "CWE-532"
+      confidence: medium
+    message: >
+      敏感欄位（卡號/CVV/餘額/密碼/token）寫入日誌 (PAT-SEC-111 / RULE-SEC-111)。請遮罩或不記錄。
+    patterns:
+      - pattern-either:
+          - pattern: $LOG.info(..., $V, ...)
+          - pattern: $LOG.warn(..., $V, ...)
+          - pattern: $LOG.debug(..., $V, ...)
+          - pattern: $LOG.error(..., $V, ...)
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?i)^(card|cvv|pan|password|passwd|balance|ssn|token|secret)$
+
+  # ---- RULE-CON-002：@Transactional 標於 private 方法（靜默失效）----
+  - id: transactional-on-private-method
+    languages: [java]
+    severity: ERROR
+    metadata:
+      pattern: PAT-CON-002
+      rule: RULE-CON-002
+      cwe: "CWE-460"
+      confidence: high
+    message: >
+      @Transactional 標於 private 方法，Spring 代理無法生效，事務靜默失效 (PAT-CON-002 / RULE-CON-002)。
+      請改 public 方法，並確保跨方法呼叫走代理。
+    patterns:
+      - pattern: |
+          @org.springframework.transaction.annotation.Transactional
+          private $RET $M(...) { ... }

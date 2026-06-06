@@ -53,11 +53,13 @@ external_refs: []
 
 ## B. 靜態規則涵蓋（3 條，刻意不做 runnable demo）
 
-| PAT | 涵蓋方式 | 原因 |
+> 以下 3 條的 Semgrep 規則皆實作於 `rules/semgrep/financial-security.yml`，附 pass/fail fixture，`semgrep --test` **7/7 通過**、CI 自動驗證。
+
+| PAT | 可執行規則（rules/semgrep/financial-security.yml） | 原因 |
 |-----|---------|------|
-| PAT-SEC-109 | Semgrep `dynamic-sql-injection-ledger`（+ fixture） | SQL 注入是純語法/taint，靜態規則即佐證 |
-| PAT-SEC-111 | Semgrep `RULE-SEC-111`（敏感欄位入日誌/回應） | 字串/欄位特徵，靜態規則最直接 |
-| PAT-CON-002 | Semgrep/SonarQube `RULE-CON-002/003` + CodeQL | @Transactional 靜默失效依賴 Spring 代理語意，純 JDK demo 代表性不足 |
+| PAT-SEC-109 | `dynamic-sql-injection-ledger`（RULE-SEC-109） | SQL 注入是純語法/taint，靜態規則即佐證 |
+| PAT-SEC-111 | `sensitive-data-in-log`（RULE-SEC-111） | 敏感欄位入日誌是欄位名特徵，靜態規則最直接 |
+| PAT-CON-002 | `transactional-on-private-method`（RULE-CON-002） | @Transactional 標於 private 方法的靜默失效，靜態可精準抓 |
 
 ## C. reproduce-scenarios SCENE 涵蓋（4 條）
 

@@ -64,4 +64,23 @@ class FinancialSecurityFixtures {
     private double profitRate;
     // ok: no-double-float-for-money
     private int retryCount;
+
+    // ===== RULE-SEC-111 敏感資料寫入日誌 =====
+    void payLog(String card, String maskedCard) {
+        // ruleid: sensitive-data-in-log
+        log.info("pay card={}", card);
+        // ok: sensitive-data-in-log
+        log.info("pay card={}", maskedCard);
+    }
+
+    // ===== RULE-CON-002 @Transactional on private =====
+    // ruleid: transactional-on-private-method
+    @org.springframework.transaction.annotation.Transactional
+    private void doSettleVuln() { updateOrder(); }
+
+    // ok: transactional-on-private-method
+    @org.springframework.transaction.annotation.Transactional
+    public void doSettleSafe() { updateOrder(); }
+
+    void updateOrder() {}
 }

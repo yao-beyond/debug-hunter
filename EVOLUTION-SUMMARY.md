@@ -59,7 +59,7 @@
 - detection-metrics → `rules-registry.md`（偵測效能度量）
 
 ### 可執行規則與 demo
-- `rules/semgrep/financial-security.yml` — RULE-SEC-101/102/106/109 + RULE-FIN-003 Semgrep 規則（`semgrep --test` 5/5 通過）
+- `rules/semgrep/financial-security.yml` — Semgrep 規則 7 條（SEC-101/102/106/109/111、CON-002、FIN-003），`semgrep --test` 7/7 通過
 - `rules/semgrep/financial-security.java` — pass/fail 測試 fixture
 - **23 個端到端閉環 demo**（純 JDK，CI 每次自動編譯執行，皆 exit 0）：涵蓋 30 條 PAT 中所有可執行的攻擊/競態/精度/業務漏洞。
   完整 Pattern→demo/規則對照矩陣見 [`knowledge-base/DEMO-COVERAGE.md`](knowledge-base/DEMO-COVERAGE.md)：
@@ -107,6 +107,6 @@ for f in knowledge-base/*.md; do head -1 "$f" | grep -q '^---$' || echo "缺 fro
 - [x] demo 全面覆蓋 → **23 個 runnable demo，涵蓋 30 條 PAT 中所有可執行者；其餘 3 條靜態規則涵蓋、4 條 SCENE 涵蓋（見 DEMO-COVERAGE.md）。每條 PAT 皆有可執行佐證**
 - [x] 為 Semgrep 規則接 CI gate（push / PR 觸發）→ **`.github/workflows/ci.yml`，每次 push/PR 跑規則測試 + 23 個 demo**
 - [ ] money-flow-map 以實際專案金流補齊（目前為範本骨架）
-- [x] 安裝 semgrep 後實跑 `--test` 驗證規則 fixture → **semgrep 1.144.0 `--test` 5/5 規則通過、0 失敗、exit 0；直接掃描確認 finding 全部命中 vuln 行、安全行零誤報**
+- [x] 安裝 semgrep 後實跑 `--test` 驗證規則 fixture → **semgrep 1.144.0 `--test` 7/7 規則通過、0 失敗、exit 0；直接掃描確認 finding 全部命中 vuln 行、安全行零誤報**
 - [x] 統一測試/語料命名 → property test 用 `PBT-FIN-01~03`、回歸語料用 `CORP-001~007`，全庫零殘留舊命名
 - [x] 修復 codex 平行寫入造成的 `financial-security.yml` 結構損壞（重複鍵）→ 規則重寫為可靠命中
