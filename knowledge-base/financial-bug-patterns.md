@@ -158,6 +158,34 @@ if (fee.compareTo(BigDecimal.ZERO) == 0) { ... }
 
 ## PAT-CON-001：Kafka 消費者缺乏冪等保護
 
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；concurrency 類）↓↓↓ -->
+```yaml
+id: PAT-CON-001
+title: Kafka 消費者缺乏冪等保護
+status: active
+confidence: high
+severity_base: P0
+category: concurrency
+applies_to: [kafka-consumer, settlement, credit]
+cwe: [CWE-694, CWE-362]
+invariants: [INV-T-02]
+antipattern:
+  - "@KafkaListener 內直接執行資金邏輯，無冪等防護"
+  - "批次 hasError 控整批 ACK，無單筆冪等（變體 B）"
+detect:
+  static_queries: ["@KafkaListener/@RabbitListener 方法呼叫 settle/credit/debit，無 setIfAbsent/唯一鍵防重"]
+  db_evidence: ["是否有唯一索引 / 狀態過濾排除已處理？"]
+false_positive_checks: ["FP-003：DB 唯一索引/狀態過濾是否已防重？"]
+confirm_when: ["MQ 消費資金操作無冪等鍵，重送會重複入帳"]
+fix_strategy: "Redis setIfAbsent 第一層 + DB 狀態機/唯一鍵第二層；批次每筆獨立冪等鍵"
+rule_ref: RULE-CON-001
+related_rule: RULE-CON-006
+poc_ref: knowledge-base/reproduce-scenarios.md#SCENE-CON-001
+created: 2024-01-01
+reproduced_count: 2
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
 **描述**：
 Kafka 的 at-least-once 語意保證訊息至少被投遞一次，在網路抖動、Rebalance、Consumer 重啟等情況下，同一訊息可能被重複投遞，若消費者沒有冪等保護，會導致重複結算、重複入帳。
 
@@ -211,6 +239,36 @@ if (Boolean.FALSE.equals(isFirst)) {
 
 ## PAT-CON-002：@Transactional 靜默失效
 
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；concurrency 類）↓↓↓ -->
+```yaml
+id: PAT-CON-002
+title: "@Transactional 靜默失效"
+status: active
+confidence: high
+severity_base: P0
+category: concurrency
+applies_to: [transaction, settlement]
+cwe: [CWE-460, CWE-754]
+antipattern:
+  - "@Transactional 加在 private 方法"
+  - "同類內部 this 呼叫繞過 Spring 代理"
+  - "try-catch 吃掉異常致不回滾"
+  - "未指定 rollbackFor，非 RuntimeException 不回滾"
+detect:
+  static_queries:
+    - "@Transactional 標於 private 方法"
+    - "@Transactional 方法 throws 受檢例外但無 rollbackFor"
+    - "@Transactional 方法內 catch Exception 後未 rethrow"
+false_positive_checks: ["是否確走 Spring 代理（非 self-invocation）？"]
+confirm_when: ["事務標注落在會靜默失效的場景"]
+fix_strategy: "public + rollbackFor=Exception.class + 不吞異常 + 跨方法走代理"
+rule_ref: RULE-CON-002
+related_rule: RULE-CON-003
+created: 2024-01-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
 **描述**：
 Spring 的 `@Transactional` 在多種情況下會靜默失效（不拋出錯誤，但事務根本沒有生效），導致部分資料更新成功、部分失敗，形成資料不一致的狀態。
 
@@ -259,6 +317,29 @@ public SettlementResult doSettle(Long orderId) {
 
 ## PAT-BIZ-002：結算結果缺乏業務合理性校驗
 
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；business 類）↓↓↓ -->
+```yaml
+id: PAT-BIZ-002
+title: 結算結果缺乏業務合理性校驗
+status: active
+confidence: medium
+severity_base: P0
+category: business
+applies_to: [settlement, payout]
+cwe: [CWE-840]
+invariants: [INV-TXN-06]
+antipattern: ["計算完直接 credit 入帳，無收益率/單筆上限/非負校驗"]
+detect:
+  static_queries: ["settle 方法在 credit/debit 前無 settlementGuard.validate 類業務守衛"]
+false_positive_checks: ["FP-001：校驗是否在 enum lambda / delegate 間接路徑？"]
+confirm_when: ["結算入帳前無業務邊界守衛"]
+fix_strategy: "結算前 settlementGuard.validate（收益率上限 / 單筆賠付上限 / 非負）"
+rule_ref: RULE-BIZ-001
+created: 2024-01-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
 **描述**：
 結算服務計算出結果後，缺乏對「業務合理性」的最終校驗。即使計算邏輯存在 Bug，也沒有任何機制能在資金真正入帳前攔截異常。
 
@@ -300,6 +381,34 @@ public void validate(Order order, BigDecimal profit) {
 ---
 
 ## PAT-CON-004：錢包批量讀取後並發更新無行鎖
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；concurrency 類）↓↓↓ -->
+```yaml
+id: PAT-CON-004
+title: 錢包批量讀取後並發更新無行鎖
+status: active
+confidence: high
+severity_base: P0
+category: concurrency
+applies_to: [wallet, batch-settlement]
+cwe: [CWE-362, CWE-567]
+invariants: [INV-ST-02]
+antipattern:
+  - "batchFindWallets 讀進記憶體 Map（無 FOR UPDATE）"
+  - "記憶體改餘額後 batchUpWallets 覆蓋寫回（無版本號）"
+  - "上游高並發 flatMap(..., N)"
+detect:
+  static_queries: ["batchFindWallets → 記憶體改餘額 → batchUpWallets，無 FOR UPDATE/version 且並發度>1"]
+  db_evidence: ["更新是否有 WHERE version=? 或 SELECT FOR UPDATE？"]
+false_positive_checks: ["是否已用樂觀鎖 version + retry？"]
+confirm_when: ["並發批次持同一錢包快照覆蓋寫回"]
+fix_strategy: "悲觀鎖 FOR UPDATE（固定順序防死鎖）或樂觀鎖 version + retryIds"
+rule_ref: RULE-CON-004
+poc_ref: knowledge-base/reproduce-scenarios.md#SCENE-CON-002
+created: 2024-01-01
+reproduced_count: 1
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
 **描述**：
 批次結算時，先將多個錢包讀取進記憶體 Map（`batchFindWallets`），在記憶體中對各錢包餘額進行修改，最後批量寫回（`batchUpWallets`）。
@@ -353,6 +462,31 @@ if (updated == 0) {
 ---
 
 ## PAT-BIZ-003：外部行情 API 失敗靜默返回預設值
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；business 類）↓↓↓ -->
+```yaml
+id: PAT-BIZ-003
+title: 外部行情 API 失敗靜默返回預設值
+status: active
+confidence: high
+severity_base: P0
+category: business
+applies_to: [quote, fx, settlement]
+cwe: [CWE-394, CWE-754]
+invariants: [INV-TXN-04]
+antipattern: ["外部 API resp.code!=1 時靜默 return BigDecimal.ZERO 繼續結算"]
+detect:
+  static_queries: ["fetch/get 外部價格方法失敗時 return ZERO/null/預設值，且返回值參與結算計算"]
+false_positive_checks: ["返回值是否僅用於展示（非計算）？"]
+confirm_when: ["結算依賴的外部資料失敗時以預設值繼續執行"]
+fix_strategy: "外部失敗拋例外（禁靜默預設）+ 返回值非零/非負校驗"
+rule_ref: RULE-BIZ-002
+poc_ref: knowledge-base/reproduce-scenarios.md#SCENE-BIZ-001
+related: [PAT-SEC-104, PAT-SEC-105]
+created: 2024-01-01
+reproduced_count: 1
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
 **描述**：
 呼叫外部行情 API 取得開盤/收盤價時，若 API 回傳錯誤狀態碼，直接靜默返回 `BigDecimal.ZERO` 作為預設值繼續執行結算流程。
@@ -415,6 +549,29 @@ private Mono<QuoteVo> fetchQuote(String code, long ts) {
 ---
 
 ## PAT-CON-005：Retry 場景下狀態標記使用非冪等切換設計
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；concurrency 類）↓↓↓ -->
+```yaml
+id: PAT-CON-005
+title: Retry 場景下狀態標記使用非冪等切換設計
+status: active
+confidence: high
+severity_base: P1
+category: concurrency
+applies_to: [retry, settlement-status]
+cwe: [CWE-696]
+antipattern: ["catch/onErrorResume 內呼叫 changeType()/toggle 切換型方法，且同層有 retryWhen/Retry.backoff"]
+detect:
+  static_queries: ["切換型方法（changeType/toggle/flip）在 catch 內，且方法/上層有重試機制"]
+false_positive_checks: ["是否為單次執行（無重試）流程？"]
+confirm_when: ["重試流程中失敗時呼叫切換型狀態方法（結果依失敗次數奇偶）"]
+fix_strategy: "改單向冪等標記（markError/set）；或 onErrorResume 集中只設定一次"
+rule_ref: RULE-CON-005
+poc_ref: knowledge-base/reproduce-scenarios.md#SCENE-CON-003
+created: 2024-01-01
+reproduced_count: 1
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
 **描述**：
 在有重試機制（如 `Retry.backoff(3, ...)`）的響應式流程中，失敗時呼叫 `changeType()` 等**切換型**（toggle）狀態方法。
