@@ -13,7 +13,7 @@
 | 偵測軌道 | 正確性 bug | **正確性 + 財務安全/舞弊雙軌** |
 | 閉環階段 | 6（DETECT 起） | **7（新增 Stage 0 威脅建模）** |
 | 偵測方法 | 特徵比對 | **特徵 + taint source→sink + 不變量 三層防線** |
-| knowledge-base | 8 檔 | **24 檔**（全數 schema 化檔頭） |
+| knowledge-base | 8 檔 | **27 檔**（全數 schema 化檔頭；**30 條 PAT 條目全數機器可讀 YAML**） |
 | agents | 3 | **5**（+threat-modeler, +security-fraud-detector） |
 | 知識治理 | 無 | **schema 化 + 證據門檻 + RECYCLE 入庫狀態機（防自我退化）** |
 | 風險定級 | 主觀 1~5 | **ALE 期望資損客觀公式** |
@@ -47,7 +47,8 @@
 - `version-compatibility-matrix.md` — Java 21 / Spring Boot 3 特有風險
 
 ### 安全模式（v2.0 既有）
-- `financial-security-patterns.md` — PAT-SEC-101~114（PAT-SEC-101 已 schema 化示範）+ 資料分級附錄
+- `financial-security-patterns.md` — PAT-SEC-101~114（**14 條全數 schema 化**）+ 資料分級附錄
+- `financial-bug-patterns.md` — PAT-FIN/CON/SCH/BIZ（**16 條全數 schema 化**，索引全覆蓋）
 - `financial-invariants.md` — INV-TXN/ST/T
 - `money-flow-map.md`, `threat-catalog.md`（+供應鏈分支）, `compliance-mapping.md`（版本經校正）
 
@@ -105,7 +106,10 @@ for f in knowledge-base/*.md; do head -1 "$f" | grep -q '^---$' || echo "缺 fro
 ## 後續 TODO（未做，留待你決定）
 
 - [x] 將 RULE-SEC-103/104/108/112 等語意型規則以 CodeQL 實作 → **`rules/codeql/` 4 條 .ql + fixtures，`.github/workflows/codeql.yml`（build-mode: none）每次 push/PR 自動編譯執行**
-- [x] 把更多 PAT-SEC 條目補上機器可讀 YAML 區塊 → **PAT-SEC-101~114 全 14 條皆有 schema 化 YAML（id/sources/sinks/required_sanitizers/detect/oracle…），demo-backed 者附 poc_ref；INV/MF 引用零斷鏈**
+- [x] 把所有 PAT 條目補上機器可讀 YAML 區塊 → **全庫 30 條 PAT 100% schema 化**：
+      `financial-security-patterns` PAT-SEC-101~114（14 條，taint 導向：sources/sinks/required_sanitizers/detect/oracle，demo-backed 附 poc_ref）
+      + `financial-bug-patterns` PAT-FIN/CON/SCH/BIZ（16 條，correctness/concurrency/business：antipattern/detect/false_positive_checks/fix_strategy）；
+      RULE/INV/MF/SCENE 交叉引用零斷鏈
 - [x] demo 擴充攻擊面 → **6 個 demo 涵蓋 PAT-SEC-101/103/104/105/106/107（越權/雙花/偽造回調/預言機/屬性越權/重放），全數實跑通過並納入 CI**
 - [x] 為 Semgrep 規則接 CI gate（push / PR 觸發）→ **`.github/workflows/ci.yml`，每次 push/PR 跑規則測試 + 6 個 demo**
 - [ ] money-flow-map 以實際專案金流補齊（目前為範本骨架）
