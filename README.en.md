@@ -1,0 +1,118 @@
+<p align="center">
+  <img src="docs/logo.jpg" alt="debug-hunter mascot: Fenyuan 🫧" width="180"/>
+</p>
+
+<h1 align="center">Debug-Hunter</h1>
+<p align="center">
+  <b>AI-Driven Closed-Loop Fintech Debugging Framework</b><br/>
+  <sub>Mascot: Fenyuan 🫧 — locked onto every financial bug the way she's locked onto that bubble</sub>
+</p>
+
+<p align="center"><a href="README.md">繁體中文</a> | <b>English</b></p>
+
+`debug-hunter` is an **AI closed-loop debugging framework** built for fintech. A structured Knowledge Base guides an AI agent through the full lifecycle — **Threat-Model → Detect → Triage → Reproduce → Fix → Verify → Recycle** — to hunt down **financial and financial-security vulnerabilities**.
+
+![debug-hunter v2.0 architecture: 7-stage loop × three-layer defense](docs/v2-architecture.png)
+
+---
+
+## 🤔 Why use this agent?
+
+Generic SAST / AI scanners have three blind spots for financial systems. debug-hunter exists to close them:
+
+| Pain point | Generic tools | debug-hunter |
+|------------|---------------|--------------|
+| **Blind to business logic** | Catch only syntax-level flaws (XSS, SQLi) | Ships with a money-flow map, ownership/authorization matrix, and settlement state machines — so it catches **IDOR fund withdrawal, TOCTOU double-spend, rounding theft, forged payment callbacks**: bugs where the code is "correct" but someone is attacking it |
+| **Confidently wrong (false positives)** | Everything is "critical," drowning real issues | **Evidence gate**: a finding stays "candidate" until it has a *taint path + DB evidence + refutation check* — no evidence, no severity |
+| **Finds but never fixes** | Hands you a list and stops | **Closed loop**: reproduce (attack PoC) → fix → verify (invariants hold) → distill each bug into a permanent rule + regression corpus so it's auto-blocked next time |
+
+**In one line:** it doesn't just ask "can the code miscalculate?" — it asks "**can an attacker make it calculate for them?**" — and uses invariants like *conservation of money* as the last safety net that catches even unknown techniques.
+
+---
+
+## 🚀 Key features
+
+- **Dual-track hunting**: a correctness hat (float errors, idempotency failures) + a security hat (privilege abuse, tampering, double-spend, forgery, injection).
+- **Three-layer defense**: signature match (known patterns) → taint flow (known attack surface) → financial invariants (unknown consequences).
+- **Governance-driven**: every knowledge entry follows [`knowledge-schema.md`](knowledge-base/knowledge-schema.md), is machine-parsable into detection actions, and self-evolves safely via RECYCLE (guarding against semantic drift / false-positive pollution).
+- **Quantified risk**: severity is annualized loss expectancy (ALE) from [`severity-loss-model.md`](knowledge-base/severity-loss-model.md), not a subjective 1–5.
+- **End-to-end verification**: property-based testing (PBT) and an attack regression corpus ensure every bug is reproducibly caught and permanently killed.
+
+---
+
+## 📦 Install
+
+### Required
+- **An agent runner**: [Claude Code CLI](https://claude.com/claude-code) recommended (it reads `AGENT.md` to drive the whole loop). Any LLM tool that supports a custom system prompt / agent file works too.
+
+### Optional (as needed)
+- **Semgrep** — to run the bundled static rules: `pipx install semgrep` or `brew install semgrep`
+- **JDK 21+** — to run the end-to-end demo (pure JDK, zero third-party deps)
+
+### Get the project
+```bash
+git clone <this-repo-url> debug-hunter
+cd debug-hunter
+```
+
+---
+
+## 🛠️ Usage
+
+### 1. Run the full loop with Claude Code (primary)
+Point Claude Code at the orchestrator `AGENT.md`; it loads the knowledge base and runs the 7 stages:
+```bash
+claude --agent AGENT.md "Scan src/settlement for all high-risk financial and security vulnerabilities"
+```
+It outputs evidence-backed findings, attack PoCs, fixes, and feedback rules.
+
+### 2. Run a single stage / specialized agent
+```bash
+# Stage 0: threat modeling (think like the attacker first)
+claude --agent agents/threat-modeler.md "Threat-model every money endpoint in src/wallet"
+
+# Stage 1: financial security / fraud detection (taint source→sink)
+claude --agent agents/security-fraud-detector.md "Scan src/settlement"
+
+# Stage 1: correctness detection
+claude --agent agents/detector.md "Static scan of src/settlement"
+```
+
+### 3. Run the bundled Semgrep rules (CI-ready)
+```bash
+# Scan your source for financial-security patterns
+semgrep --config rules/semgrep/financial-security.yml src/
+
+# Validate the rules themselves (pass/fail fixtures — should be 5/5)
+semgrep --test rules/semgrep/
+```
+
+### 4. Run the end-to-end demo (see the loop in action)
+```bash
+cd examples/vulnerable-settlement
+javac IdorDemo.java && java IdorDemo
+# Prints DETECT → REPRODUCE(PoC) → VERIFY for an IDOR fund-withdrawal bug
+```
+
+### 5. Let the knowledge base drive AI diagnosis
+When you (or the AI) hit an anomaly, anchor the judgment to the knowledge base:
+> "Per [`financial-invariants.md`](knowledge-base/financial-invariants.md), check whether this finding violates balance conservation; map it against [`money-flow-map.md`](knowledge-base/money-flow-map.md); and only assign severity after completing the evidence required by [`finding-evidence-standard.md`](knowledge-base/finding-evidence-standard.md)."
+
+---
+
+## 🗺️ Knowledge Base
+
+Knowledge is organized into four layers. Full map: [**MAP.md**](knowledge-base/MAP.md); per-file index and consistency checks: [**KB-INDEX.md**](knowledge-base/KB-INDEX.md).
+
+1. **Meta-governance** — knowledge format & evidence standards: `knowledge-schema`, `finding-evidence-standard`
+2. **Ground-truth** — money-flow map, ownership matrix, state machines, glossary
+3. **Patterns** — vulnerability patterns (PAT-SEC/FIN/BIZ), invariants (INV), risk model
+4. **Execution** — reproduction scripts, attack corpus, Semgrep rules, debug playbooks
+
+---
+
+## 📈 Vision
+Eliminate "phantom bugs" in financial systems — automated interception and precise severity for core business vulnerabilities, so that every fixed bug never comes back.
+
+---
+© 2026 AetherCare Systems - Financial DevSecOps Division.
