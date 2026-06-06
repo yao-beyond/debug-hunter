@@ -84,7 +84,7 @@ external_refs: ["OWASP API Top 10 2023#API1", "CWE-639", "CWE-841", "CWE-863", "
 
 ## PAT-SEC-101：資金操作缺乏帳戶歸屬校驗（越權動帳 IDOR）
 
-<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0）— 供 detector/LLM 解析成偵測動作 ↓↓↓ -->
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0）↓↓↓ -->
 ```yaml
 id: PAT-SEC-101
 title: 資金操作缺乏帳戶歸屬校驗（IDOR）
@@ -97,35 +97,26 @@ owasp_api: [API1]
 flows: [MF-01, MF-02]
 invariants: [INV-ST-01]
 compliance: ["PCI:Req7", "ASVS:V4.1", "SOC2:CC6.1"]
-sources:
-  - "HTTP @RequestParam/@PathVariable accountId|userId|orderId"
-sinks:
-  - "walletService.debit(accountId, amount)"
-  - "settlementService.settle(order)"
+sources: ["HTTP @RequestParam/@PathVariable accountId|userId|orderId"]
+sinks: ["walletService.debit(accountId, amount)", "settlementService.settle(order)"]
 required_sanitizers:
-  - "account.userId == securityContext.userId   # 歸屬錨定於認證主體，非請求參數"
-bypassable_sanitizers:
-  - "僅 Controller 校驗，但 Service 層另有入口可直達 sink"
+  - "account.userId == securityContext.userId（歸屬錨定於認證主體，非請求參數）"
 detect:
-  static_queries:
-    - "trace each source id to each money sink; require ownership check on path"
-  db_evidence:
-    - "歸屬是否由 repository SQL 的 WHERE user_id=? 強制？若是則非漏洞"
+  static_queries: ["每個 source id 追蹤到資金 sink，path 上需有歸屬校驗"]
+  db_evidence: ["歸屬是否由 repository SQL 的 WHERE user_id=? 強制？若是則非漏洞"]
 false_positive_checks:
   - "FP-001 歸屬校驗是否在 enum lambda / delegate 間接路徑內？"
   - "歸屬是否由 DB 層 / repository 強制（非僅 controller）？"
-confirm_when:
-  - "source 抵達 sink 且 path 上（含 DB 層）無等效 ownership sanitizer"
-reproduce:
-  - "以 user A 的 token 帶入 user B 的 accountId 提款"
-oracle:
-  - "INV-ST-01 被違反，或越權動帳成功"
+confirm_when: ["source 抵達 sink 且 path 上（含 DB 層）無等效 ownership sanitizer"]
+reproduce: ["以 user A 的 token 帶入 user B 的 accountId 提款"]
+oracle: ["INV-ST-01 被違反，或越權動帳成功"]
 fix_strategy: "以認證主體為錨點，請求 id 僅用於一致性校驗"
 rule_ref: RULE-SEC-101
+poc_ref: examples/vulnerable-settlement/IdorDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
-<!-- ↑↑↑ 機器可讀區塊結束；以下為人讀補充 ↑↑↑ -->
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
 **描述**：
 資金操作（查餘額、提款、結算、轉帳）以請求參數中的 `accountId/userId/orderId` 直接定位資源，未校驗該資源是否屬於當前認證主體。攻擊者改一個 ID 即可操作他人帳戶。這是金融系統 **最高頻、損失最直接** 的漏洞。
