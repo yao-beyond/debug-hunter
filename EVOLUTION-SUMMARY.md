@@ -97,7 +97,7 @@ for f in knowledge-base/*.md; do head -1 "$f" | grep -q '^---$' || echo "缺 fro
 
 - [ ] 將 RULE-SEC-103/104/108/112 等語意型規則以 CodeQL 實作（Semgrep 易誤報）
 - [ ] 把更多 PAT-SEC 條目補上機器可讀 YAML 區塊（目前示範了 PAT-SEC-101）
-- [ ] demo 擴充第二個漏洞（偽造回調 PAT-SEC-104）展示外部信任邊界
+- [x] demo 擴充第二個漏洞（偽造回調 PAT-SEC-104）→ **PaymentCallbackDemo.java，HMAC 驗簽 + 我方金額 + 冪等，4 情境實跑通過、已納入 CI**
 - [ ] 為 Semgrep 規則接 CI gate（PR 觸發）
 - [ ] money-flow-map 以實際專案金流補齊（目前為範本骨架）
 - [x] 安裝 semgrep 後實跑 `--test` 驗證規則 fixture → **semgrep 1.144.0 `--test` 5/5 規則通過、0 失敗、exit 0；直接掃描確認 6 個 finding 全部命中 vuln 行、安全行零誤報**

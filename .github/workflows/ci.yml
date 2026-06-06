@@ -29,8 +29,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - name: Compile & run IDOR closed-loop demo
+      - name: Compile & run closed-loop demos
         run: |
           cd examples/vulnerable-settlement
-          javac IdorDemo.java
-          java IdorDemo
+          javac IdorDemo.java && java IdorDemo
+          javac PaymentCallbackDemo.java && java PaymentCallbackDemo

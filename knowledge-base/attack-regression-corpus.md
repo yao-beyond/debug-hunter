@@ -55,6 +55,23 @@ Authorization: Bearer <UserA_Token>
 
 ---
 
-## 4. 如何使用
+## 4. 樣本：偽造支付回調 (Webhook Forgery)
+- **ID**: CORP-004
+- **類型**: PAT-SEC-104 / 偽造回調
+- **Payload**:
+```http
+POST /payment/callback
+Content-Type: application/x-www-form-urlencoded
+
+orderNo=ORD-1&userId=alice&status=SUCCESS&amount=100000
+（無有效 HMAC 簽章）
+```
+- **Expected Outcome**: `SecurityException 回調簽章驗證失敗`，不入帳。
+- **Failed Case**: 偽造回調直接入帳（白嫖），INV-T-03 內外對帳破裂。
+- **可執行 PoC**: `examples/vulnerable-settlement/PaymentCallbackDemo.java`（CI 每次自動跑）
+
+---
+
+## 5. 如何使用
 - **Detection**: AI 掃描代碼時，將代碼邏輯與此語料庫的攻擊向量比對。
 - **Validation**: 修復後，執行此語料庫中的 PoC 確保無法觸發。
