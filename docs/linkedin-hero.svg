@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" font-family="'PingFang TC','Noto Sans CJK TC','Microsoft JhengHei','Heiti TC',sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1220"/><stop offset="0.55" stop-color="#0E1A33"/><stop offset="1" stop-color="#0A0E1A"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <clipPath id="logoclip"><circle cx="600" cy="168" r="74"/></clipPath>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <rect x="28" y="28" width="1144" height="1144" rx="28" fill="none" stroke="#1E3358" stroke-width="2"/>
+
+  <!-- mascot logo -->
+  <circle cx="600" cy="168" r="78" fill="none" stroke="#34D399" stroke-width="3"/>
+  <image href="logo.jpg" x="526" y="94" width="148" height="148" clip-path="url(#logoclip)" preserveAspectRatio="xMidYMid slice"/>
+
+  <!-- title -->
+  <text x="600" y="320" text-anchor="middle" fill="#E5EDFF" font-size="76" font-weight="800">debug-hunter <tspan fill="#34D399">v2.0</tspan></text>
+  <text x="600" y="368" text-anchor="middle" fill="#9FB4D8" font-size="30">金融資安 AI 閉環偵察框架</text>
+  <text x="600" y="406" text-anchor="middle" fill="#64748B" font-size="21">不只問「程式會不會算錯」，更問「攻擊者能不能讓它替他算」</text>
+
+  <!-- stat trio -->
+  <g text-anchor="middle">
+    <text x="300" y="520" fill="#22D3EE" font-size="86" font-weight="800">30</text>
+    <text x="300" y="556" fill="#8FA3C6" font-size="22">金融漏洞模式</text>
+    <text x="300" y="582" fill="#5B6B86" font-size="16">100% 機器可讀 schema</text>
+
+    <text x="600" y="520" fill="#34D399" font-size="86" font-weight="800">23</text>
+    <text x="600" y="556" fill="#8FA3C6" font-size="22">可執行 demo</text>
+    <text x="600" y="582" fill="#5B6B86" font-size="16">CI 23/23 全綠</text>
+
+    <text x="900" y="520" fill="#A78BFA" font-size="86" font-weight="800">7</text>
+    <text x="900" y="556" fill="#8FA3C6" font-size="22">階段閉環</text>
+    <text x="900" y="582" fill="#5B6B86" font-size="16">含 Stage 0 威脅建模</text>
+  </g>
+  <line x1="450" y1="500" x2="450" y2="588" stroke="#1E3358"/>
+  <line x1="750" y1="500" x2="750" y2="588" stroke="#1E3358"/>
+
+  <!-- three-layer defense -->
+  <text x="100" y="660" fill="#FBBF24" font-size="22" font-weight="700" letter-spacing="2">三層防線　DEFENSE IN DEPTH</text>
+  <g>
+    <rect x="100" y="678" width="1000" height="66" rx="12" fill="#0E2730" stroke="#1C4A57"/>
+    <rect x="100" y="678" width="10" height="66" rx="5" fill="#22D3EE"/>
+    <text x="130" y="709" fill="#9EE9F5" font-size="24" font-weight="700">① 特徵比對</text>
+    <text x="130" y="733" fill="#7FA9B3" font-size="16">已知錯誤寫法　·　Patterns / Semgrep / CodeQL</text>
+    <text x="1075" y="718" text-anchor="end" fill="#5BCBD8" font-size="15">已知漏洞</text>
+
+    <rect x="100" y="756" width="1000" height="66" rx="12" fill="#2A2410" stroke="#5A4A1C"/>
+    <rect x="100" y="756" width="10" height="66" rx="5" fill="#FBBF24"/>
+    <text x="130" y="787" fill="#FCD974" font-size="24" font-weight="700">② Taint 汙染流 source → sink</text>
+    <text x="130" y="811" fill="#B3A06A" font-size="16">已知攻擊面　·　金流地圖 / 授權矩陣 / 清洗閘登錄</text>
+    <text x="1075" y="796" text-anchor="end" fill="#E5B84B" font-size="15">攻擊路徑</text>
+
+    <rect x="100" y="834" width="1000" height="66" rx="12" fill="#231A33" stroke="#4A3A6B"/>
+    <rect x="100" y="834" width="10" height="66" rx="5" fill="#A78BFA"/>
+    <text x="130" y="865" fill="#C9B8FB" font-size="24" font-weight="700">③ 金融不變量</text>
+    <text x="130" y="889" fill="#9F8FC4" font-size="16">未知後果的最後一張網　·　金錢守恆 / 餘額非負 / 借貸平衡</text>
+    <text x="1075" y="874" text-anchor="end" fill="#B49BFB" font-size="15">未知手法</text>
+  </g>
+
+  <!-- evidence gate one-liner -->
+  <text x="600" y="952" text-anchor="middle" fill="#F87171" font-size="26" font-weight="700">「沒有證據，就沒有嚴重度」</text>
+  <text x="600" y="984" text-anchor="middle" fill="#8FA3C6" font-size="18">finding 須附 汙染路徑 + DB 證據 + 反證，才可定高危 → 大幅降誤報</text>
+
+  <!-- tri-model -->
+  <rect x="300" y="1016" width="600" height="46" rx="23" fill="#10182B" stroke="#243a63"/>
+  <text x="600" y="1045" text-anchor="middle" fill="#C9D1D9" font-size="19">三模型對抗式協作　·　<tspan fill="#22D3EE">Claude</tspan> · <tspan fill="#7ee787">Codex</tspan> · <tspan fill="#A78BFA">Gemini</tspan></text>
+
+  <!-- status chips -->
+  <g font-size="17" font-weight="600" text-anchor="middle">
+    <rect x="170" y="1086" width="190" height="40" rx="20" fill="#0F2A24" stroke="#2C6E58"/>
+    <text x="265" y="1111" fill="#86EFAC">✓ CI demo 23/23</text>
+    <rect x="380" y="1086" width="190" height="40" rx="20" fill="#0F2A24" stroke="#2C6E58"/>
+    <text x="475" y="1111" fill="#86EFAC">✓ Semgrep 7/7</text>
+    <rect x="590" y="1086" width="170" height="40" rx="20" fill="#0F2A24" stroke="#2C6E58"/>
+    <text x="675" y="1111" fill="#86EFAC">✓ CodeQL 綠</text>
+    <rect x="780" y="1086" width="150" height="40" rx="20" fill="#13243F" stroke="#1E3358"/>
+    <text x="855" y="1111" fill="#9FB4D8">MIT 開源</text>
+  </g>
+
+  <text x="600" y="1156" text-anchor="middle" fill="#475569" font-size="18">github.com/yao-beyond/debug-hunter　·　吉祥物：粉圓 🫧</text>
+</svg>
