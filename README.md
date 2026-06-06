@@ -110,6 +110,8 @@ cd examples/vulnerable-settlement
 for f in *Demo.java; do javac "$f" && java "${f%.java}"; done   # 全部跑一遍，exit 0 = 閉環成立
 ```
 
+![demo 套件實際執行：23 個 demo 全數通過](docs/demo-suite-run.png)
+
 > **完整 Pattern → demo/規則 對照矩陣見 [DEMO-COVERAGE.md](knowledge-base/DEMO-COVERAGE.md)**：30 條 PAT 全有佐證——23 條可執行 demo、3 條由 Semgrep/CodeQL 靜態規則涵蓋、4 條由 `reproduce-scenarios` 的 SCENE 涵蓋。各 demo 說明見 [examples README](examples/vulnerable-settlement/README.md)。
 
 ### 5. 讓知識庫驅動 AI 診斷

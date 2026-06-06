@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="720" viewBox="0 0 1000 720" font-family="'SF Mono','JetBrains Mono','Menlo','Consolas',monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1117"/><stop offset="1" stop-color="#0a0e14"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="720" rx="10" fill="url(#bg)"/>
+  <!-- title bar -->
+  <rect width="1000" height="34" rx="10" fill="#161b22"/>
+  <rect y="20" width="1000" height="14" fill="#161b22"/>
+  <circle cx="20" cy="17" r="6" fill="#ff5f56"/><circle cx="40" cy="17" r="6" fill="#ffbd2e"/><circle cx="60" cy="17" r="6" fill="#27c93f"/>
+  <text x="500" y="22" text-anchor="middle" fill="#7d8590" font-size="13">examples/vulnerable-settlement — demo suite</text>
+
+  <text font-size="13.5" xml:space="preserve">
+    <tspan x="20" y="60" fill="#7ee787">➜</tspan><tspan fill="#79c0ff"> for</tspan><tspan fill="#c9d1d9"> f </tspan><tspan fill="#79c0ff">in</tspan><tspan fill="#c9d1d9"> *Demo.java; </tspan><tspan fill="#79c0ff">do</tspan><tspan fill="#c9d1d9"> javac "$f" &amp;&amp; java "${f%.java}"; </tspan><tspan fill="#79c0ff">done</tspan>
+
+    <tspan x="20" y="92" fill="#8b949e">PAT-SEC（安全攻擊）</tspan>
+    <tspan x="40" y="114" fill="#c9d1d9">IdorDemo</tspan>               <tspan x="300" y="114" fill="#7d8590">越權動帳 (101)</tspan>            <tspan x="640" y="114" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="134" fill="#c9d1d9">AmountTamperDemo</tspan>       <tspan x="300" y="134" fill="#7d8590">金額竄改 (102)</tspan>            <tspan x="640" y="134" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="154" fill="#c9d1d9">DoubleSpendDemo</tspan>        <tspan x="300" y="154" fill="#7d8590">TOCTOU 雙花 (103)</tspan>         <tspan x="640" y="154" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="174" fill="#c9d1d9">PaymentCallbackDemo</tspan>    <tspan x="300" y="174" fill="#7d8590">偽造回調 (104)</tspan>            <tspan x="640" y="174" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="194" fill="#c9d1d9">OracleManipulationDemo</tspan> <tspan x="300" y="194" fill="#7d8590">預言機操縱 (105)</tspan>          <tspan x="640" y="194" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="214" fill="#c9d1d9">MassAssignmentDemo</tspan>     <tspan x="300" y="214" fill="#7d8590">屬性越權 (106)</tspan>            <tspan x="640" y="214" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="234" fill="#c9d1d9">ReplayDemo</tspan>             <tspan x="300" y="234" fill="#7d8590">請求重放 (107)</tspan>            <tspan x="640" y="234" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="254" fill="#c9d1d9">MakerCheckerDemo</tspan>       <tspan x="300" y="254" fill="#7d8590">缺雙人覆核 (108)</tspan>          <tspan x="640" y="254" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="274" fill="#c9d1d9">AuditTrailDemo</tspan>         <tspan x="300" y="274" fill="#7d8590">缺稽核軌跡 (110)</tspan>          <tspan x="640" y="274" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="294" fill="#c9d1d9">VelocityDemo</tspan>           <tspan x="300" y="294" fill="#7d8590">缺速率限制 (112)</tspan>          <tspan x="640" y="294" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="314" fill="#c9d1d9">PromoAbuseDemo</tspan>         <tspan x="300" y="314" fill="#7d8590">優惠套利 (113)</tspan>            <tspan x="640" y="314" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="334" fill="#c9d1d9">IdempotencyKeyDemo</tspan>     <tspan x="300" y="334" fill="#7d8590">弱冪等鍵 (114)</tspan>            <tspan x="640" y="334" fill="#3fb950">✔ 閉環成立</tspan>
+
+    <tspan x="20" y="362" fill="#8b949e">PAT-CON / SCH（並發 / 排程）</tspan>
+    <tspan x="40" y="384" fill="#c9d1d9">LockTtlDemo</tspan>            <tspan x="300" y="384" fill="#7d8590">分散式鎖 TTL (CON-003)</tspan>    <tspan x="640" y="384" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="404" fill="#c9d1d9">SchedulerRaceDemo</tspan>      <tspan x="300" y="404" fill="#7d8590">排程資料競爭 (SCH-001)</tspan>    <tspan x="640" y="404" fill="#3fb950">✔ 閉環成立</tspan>
+
+    <tspan x="20" y="432" fill="#8b949e">PAT-FIN / BIZ（精度 / 業務）</tspan>
+    <tspan x="40" y="454" fill="#c9d1d9">FloatMoneyDemo</tspan>         <tspan x="300" y="454" fill="#7d8590">double/float 金額 (FIN-002)</tspan> <tspan x="640" y="454" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="474" fill="#c9d1d9">BigDecimalEqualsDemo</tspan>   <tspan x="300" y="474" fill="#7d8590">equals 比較 (FIN-003)</tspan>     <tspan x="640" y="474" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="494" fill="#c9d1d9">DivideRoundingDemo</tspan>     <tspan x="300" y="494" fill="#7d8590">divide 捨入 (FIN-004)</tspan>     <tspan x="640" y="494" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="514" fill="#c9d1d9">AssetScaleDemo</tspan>         <tspan x="300" y="514" fill="#7d8590">多資產精度 (FIN-005)</tspan>      <tspan x="640" y="514" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="534" fill="#c9d1d9">AllocationResidueDemo</tspan>  <tspan x="300" y="534" fill="#7d8590">捨入殘差 salami (FIN-006)</tspan>  <tspan x="640" y="534" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="554" fill="#c9d1d9">TimestampUnitDemo</tspan>      <tspan x="300" y="554" fill="#7d8590">時間戳/時區 (FIN-007)</tspan>     <tspan x="640" y="554" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="574" fill="#c9d1d9">LongOverflowDemo</tspan>       <tspan x="300" y="574" fill="#7d8590">long 溢位 (FIN-008)</tspan>       <tspan x="640" y="574" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="594" fill="#c9d1d9">SettlementGuardDemo</tspan>    <tspan x="300" y="594" fill="#7d8590">缺業務守衛 (BIZ-002)</tspan>      <tspan x="640" y="594" fill="#3fb950">✔ 閉環成立</tspan>
+    <tspan x="40" y="614" fill="#c9d1d9">TradingWindowRaceDemo</tspan>  <tspan x="300" y="614" fill="#7d8590">委託窗口競態 (BIZ-001)</tspan>    <tspan x="640" y="614" fill="#3fb950">✔ 閉環成立</tspan>
+  </text>
+
+  <line x1="20" y1="638" x2="980" y2="638" stroke="#21262d" stroke-width="1"/>
+  <text font-size="14.5" xml:space="preserve">
+    <tspan x="20" y="666" fill="#7ee787">➜</tspan><tspan fill="#c9d1d9"> 23 demos · </tspan><tspan fill="#3fb950" font-weight="bold">23 PASS</tspan><tspan fill="#c9d1d9"> · 0 FAIL · exit 0</tspan>
+    <tspan x="20" y="692" fill="#8b949e">每個 demo：DETECT → REPRODUCE(PoC) → VERIFY；PoC 成功 = 違反金融不變量。CI 每次 push 自動執行。</tspan>
+  </text>
+</svg>

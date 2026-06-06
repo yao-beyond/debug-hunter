@@ -110,6 +110,8 @@ cd examples/vulnerable-settlement
 for f in *Demo.java; do javac "$f" && java "${f%.java}"; done   # run all; exit 0 = loop holds
 ```
 
+![demo suite run: all 23 demos pass](docs/demo-suite-run.png)
+
 > **Full pattern → demo/rule matrix: [DEMO-COVERAGE.md](knowledge-base/DEMO-COVERAGE.md)** — all 30 PATs are evidenced: 23 runnable demos, 3 covered by Semgrep/CodeQL static rules, 4 covered by `reproduce-scenarios` SCENEs. Per-demo notes: [examples README](examples/vulnerable-settlement/README.md).
 
 ### 5. Let the knowledge base drive AI diagnosis
