@@ -32,6 +32,9 @@ javac SchedulerRaceDemo.java && java SchedulerRaceDemo
 # Demo 8：委託時間窗口競態（PAT-BIZ-001）
 javac TradingWindowRaceDemo.java && java TradingWindowRaceDemo
 
+# Demo 9：分散式鎖 TTL 設計缺陷（PAT-CON-003）
+javac LockTtlDemo.java && java LockTtlDemo
+
 # exit 0 = 閉環成立
 ```
 
@@ -174,6 +177,22 @@ javac TradingWindowRaceDemo.java && java TradingWindowRaceDemo
 | 不變量 | `financial-invariants.md#INV-T-03 / INV-ST-05` |
 | 修復規則 | `rules-registry.md#RULE-BIZ-003`（權威時鐘 + 原子窗口判斷） |
 | 相關 | `time-window-cutoff-calendar-rules.md`（帳務日/cutoff 歸期） |
+
+---
+
+## Demo 9 — `LockTtlDemo`：分散式鎖 TTL 設計缺陷
+
+可控時鐘重現「鎖提前過期」與「釋放未校驗持有者」兩種互斥失效。
+- **漏洞版**：TTL=5 < 業務時間=10 → A 鎖中途過期，B 於 t=6 取得 → 兩者同處臨界區 → 重複結算
+- **修復版**：TTL > 業務時間（或 watchdog 續租）→ B 取鎖失敗，互斥成立、單次結算
+- **持有者校驗**：不安全釋放（無條件 del）會誤刪 B 剛取得的鎖；安全釋放（Lua 校驗 token）為 no-op，保護 B 的鎖
+- **PoC 成功判據**：INV-T-02（同一 runner 結算次數 > 1 即互斥失效）
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-bug-patterns.md#PAT-CON-003` |
+| 不變量 | `financial-invariants.md#INV-T-02` |
+| 修復規則 | `rules-registry.md#RULE-CON-008`（TTL>業務時間 + watchdog + 持有者校驗釋放） |
 
 ---
 

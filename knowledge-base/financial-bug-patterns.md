@@ -909,8 +909,9 @@ false_positive_checks: ["是否使用 Redisson 等自帶 watchdog 續租？"]
 confirm_when: ["鎖 TTL < 最長業務時間，或釋放未校驗持有者"]
 fix_strategy: "TTL > 最長執行時間 + watchdog 續租；釋放用 Lua 校驗 value==token 才 del"
 rule_ref: RULE-CON-008
+poc_ref: examples/vulnerable-settlement/LockTtlDemo.java
 created: 2026-06-07
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
