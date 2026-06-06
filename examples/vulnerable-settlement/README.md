@@ -20,6 +20,12 @@ javac OracleManipulationDemo.java && java OracleManipulationDemo
 # Demo 4：TOCTOU 雙花（PAT-SEC-103，真並發）
 javac DoubleSpendDemo.java && java DoubleSpendDemo
 
+# Demo 5：Mass assignment 改餘額（PAT-SEC-106）
+javac MassAssignmentDemo.java && java MassAssignmentDemo
+
+# Demo 6：請求重放（PAT-SEC-107）
+javac ReplayDemo.java && java ReplayDemo
+
 # exit 0 = 閉環成立
 ```
 
@@ -93,6 +99,42 @@ javac DoubleSpendDemo.java && java DoubleSpendDemo
 | 不變量 | `financial-invariants.md#INV-ST-01` |
 | DB 層修復依據 | `persistence-consistency-controls.md`（原子扣款 / 樂觀鎖） |
 | 回歸語料 | `attack-regression-corpus.md#CORP-003` |
+
+---
+
+## Demo 5 — `MassAssignmentDemo`：Mass assignment 改餘額
+
+攻擊者在「更新暱稱」的請求裡夾帶 `balance`、`status` 欄位，框架直接綁定到持久化實體。
+- **漏洞版**：請求 body 全欄位綁定 → 餘額被灌成 $999,999.99、status 越過狀態機改成 VIP
+- **修復版**：白名單 DTO 只允許 `nickname`；餘額只能經記帳路徑（會寫分錄）變更
+- **PoC 成功判據**：INV-ST-02（餘額 ≠ 初始 + Σ帳本分錄；憑空改餘額卻無分錄）
+- 含正向對照：合法記帳（有分錄）不變量仍成立 → 凸顯「差別在有沒有分錄」
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-security-patterns.md#PAT-SEC-106` |
+| 資料分級 / 白名單 | `authorization-ownership-matrix.md`（第 7 節 P1 核心金流數據） |
+| 不變量 | `financial-invariants.md#INV-ST-02` |
+| 靜態規則 | `rules/semgrep/financial-security.yml#mass-assignment-entity-persist` |
+| 回歸語料 | `attack-regression-corpus.md#CORP-006` |
+
+---
+
+## Demo 6 — `ReplayDemo`：請求重放
+
+攻擊者攔截一筆**原本合法、已簽章**的資金請求，原樣重送。
+- **漏洞版**：驗簽通過就執行，無 nonce / 時間窗 → 同封包重放 → 重複轉帳（alice 被扣兩次變負）
+- **修復版**：驗簽 ＋ 時間窗 ＋ nonce 一次性消費 → 第二次重放被擋
+- **PoC 成功判據**：INV-T-04（重放零增益；重送同請求不該改變狀態）
+- 與 `PaymentCallbackDemo` 的差異：那是支付回調冪等；這裡是攻擊者**主動重放合法資金請求**
+- 含 2 個對照：不同 nonce 正常放行、過期請求被時間窗擋下
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-security-patterns.md#PAT-SEC-107` |
+| 威脅 / 濫用案例 | `threat-catalog.md`（AB-07） |
+| 不變量 | `financial-invariants.md#INV-T-04` |
+| 回歸語料 | `attack-regression-corpus.md#CORP-007` |
 
 ---
 

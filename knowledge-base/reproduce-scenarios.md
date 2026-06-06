@@ -26,6 +26,7 @@ external_refs: []
 | SCENE-CON-002 | 並發批次更新錢包餘額丟失 | 並發測試 | Confirmed | ~80%（並發度≥5時） | SettlementFlow.java BUG-EXAMPLE-102 |
 | SCENE-BIZ-001 | 行情 API 失敗靜默返回 ZERO 導致平局誤判 | 單元測試 | Confirmed | 100%（API失敗時） | SettlementFlow.java BUG-EXAMPLE-103 |
 | SCENE-CON-003 | Retry 場景 changeType() 狀態奇偶污染 | 單元測試 | Confirmed | 100%（重試次數為偶數時） | SettlementFlow.java BUG-EXAMPLE-104 |
+| SCENE-SEC-001 | Mass Assignment 直接竄改餘額欄位 | 負面測試 | Confirmed | 100% | MassAssignmentDemo.java |
 
 ---
 
@@ -302,6 +303,53 @@ void scene_con_003_changeType_unpredictable_under_retry(int retryCount) {
 ```
 
 **測試檔案路徑**：`src/test/java/com/example/reproduce/SceneConReproduceTest.java`
+
+---
+
+## SCENE-SEC-001：Mass Assignment 直接竄改餘額欄位
+
+**對應 Bug 模式**：PAT-SEC-106
+**對應靜態規則**：RULE-SEC-106
+
+### 前置條件
+| 條件 | 值 | 說明 |
+|------|-----|------|
+| 框架行為 | 自動綁定 | 框架（如 Spring/Jackson）會自動將請求 key 映射到 entity setter |
+| 暴露欄位 | balance | Account 實體包含 balance 欄位且有 public setter |
+
+### 觸發步驟
+```
+1. 攻擊者構造 HTTP POST 請求，目標為更新暱稱的 API。
+2. 在 JSON body 中額外夾帶 "balance": 999999.00。
+3. 後端 Controller 直接使用 @RequestBody Account account 接收參數。
+4. 框架呼叫 setBalance()，餘額被非法修改。
+```
+
+### 錯誤結果
+```
+預期：餘額保持不變，或僅能透過「記帳 (Ledger)」路徑變更。
+實際：餘額被竄改，且系統中無對應的分錄紀錄，違反 INV-ST-02。
+```
+
+### 復現測試
+```java
+// 參見 examples/vulnerable-settlement/MassAssignmentDemo.java
+Account acc = new Account("A001", "Alice", new BigDecimal("100.00"), "FROZEN");
+Map<String, Object> attackReq = new HashMap<>();
+attackReq.put("balance", new BigDecimal("999999.00"));
+attackReq.put("status", "ACTIVE");          // 變體：越過狀態機解凍
+
+// 漏洞版執行綁定
+vulnerableUpdate(acc, attackReq);
+
+// 驗證不變量（INV-ST-02：餘額 == 初始 + Σ分錄）
+boolean holds = invST02Holds(acc, new BigDecimal("100.00"));   // 漏洞版回 false
+```
+
+**觸發機率**：100%
+**測試檔案路徑**：`examples/vulnerable-settlement/MassAssignmentDemo.java`
+**新增日期**：2026-06-06
+**新增人員**：Gemini CLI Agent
 
 ---
 

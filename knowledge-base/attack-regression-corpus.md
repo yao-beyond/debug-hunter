@@ -84,6 +84,29 @@ orderNo=ORD-1&userId=alice&status=SUCCESS&amount=100000
 
 ---
 
-## 6. 如何使用
+## 6. 樣本：Mass assignment 改餘額 (Mass Assignment)
+- **ID**: CORP-006
+- **類型**: PAT-SEC-106 / 物件屬性層級越權
+- **Payload**:
+```json
+{ "nickname": "hacker", "status": "VIP", "balance": 99999999 }
+```
+- **Expected Outcome**: 白名單 DTO 只接受 nickname；balance/status 被忽略。
+- **Failed Case**: 餘額被灌成 $999,999.99 且越過狀態機，INV-ST-02（餘額=初始+Σ分錄）破裂。
+- **可執行 PoC**: `examples/vulnerable-settlement/MassAssignmentDemo.java`（CI 每次自動跑）
+
+---
+
+## 7. 樣本：請求重放 (Replay)
+- **ID**: CORP-007
+- **類型**: PAT-SEC-107 / 重放攻擊
+- **攻擊**: 攔截一筆已簽章的合法轉帳封包，原樣重送第二次。
+- **Expected Outcome**: nonce 一次性消費 + 時間窗 → 第二次被擋（重放零增益）。
+- **Failed Case**: 重複轉帳，付款人被扣兩次、餘額變負，INV-T-04 破裂。
+- **可執行 PoC**: `examples/vulnerable-settlement/ReplayDemo.java`（CI 每次自動跑）
+
+---
+
+## 8. 如何使用
 - **Detection**: AI 掃描代碼時，將代碼邏輯與此語料庫的攻擊向量比對。
 - **Validation**: 修復後，執行此語料庫中的 PoC 確保無法觸發。

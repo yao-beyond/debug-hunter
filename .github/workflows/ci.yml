@@ -36,3 +36,5 @@ jobs:
           javac PaymentCallbackDemo.java && java PaymentCallbackDemo
           javac OracleManipulationDemo.java && java OracleManipulationDemo
           javac DoubleSpendDemo.java && java DoubleSpendDemo
+          javac MassAssignmentDemo.java && java MassAssignmentDemo
+          javac ReplayDemo.java && java ReplayDemo
