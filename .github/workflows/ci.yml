@@ -34,3 +34,4 @@ jobs:
           cd examples/vulnerable-settlement
           javac IdorDemo.java && java IdorDemo
           javac PaymentCallbackDemo.java && java PaymentCallbackDemo
+          javac OracleManipulationDemo.java && java OracleManipulationDemo

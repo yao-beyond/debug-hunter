@@ -72,6 +72,16 @@ orderNo=ORD-1&userId=alice&status=SUCCESS&amount=100000
 
 ---
 
-## 5. 如何使用
+## 5. 樣本：預言機操縱 / 陳舊價 (Oracle Manipulation)
+- **ID**: CORP-005
+- **類型**: PAT-SEC-105 / 行情操縱
+- **攻擊**: 瞬間拉抬單一行情來源至 100000（公允價 100），或注入 10 分鐘前的陳舊價。
+- **Expected Outcome**: 多源中位數排除離群 / 時效窗拒陳舊 / 偏離熔斷暫停結算。
+- **Failed Case**: 以被操縱價結算，定向多賠 ~1000 倍，INV-ST-03 守恆破壞。
+- **可執行 PoC**: `examples/vulnerable-settlement/OracleManipulationDemo.java`（CI 每次自動跑）
+
+---
+
+## 6. 如何使用
 - **Detection**: AI 掃描代碼時，將代碼邏輯與此語料庫的攻擊向量比對。
 - **Validation**: 修復後，執行此語料庫中的 PoC 確保無法觸發。

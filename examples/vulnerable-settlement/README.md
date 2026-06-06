@@ -14,6 +14,9 @@ javac IdorDemo.java && java IdorDemo
 # Demo 2：偽造支付回調 / Webhook 偽造（PAT-SEC-104）
 javac PaymentCallbackDemo.java && java PaymentCallbackDemo
 
+# Demo 3：預言機操縱 / 陳舊價（PAT-SEC-105）
+javac OracleManipulationDemo.java && java OracleManipulationDemo
+
 # exit 0 = 閉環成立
 ```
 
@@ -51,6 +54,24 @@ javac PaymentCallbackDemo.java && java PaymentCallbackDemo
 | 不變量 | `financial-invariants.md#INV-T-03` |
 | 回歸語料 | `attack-regression-corpus.md#CORP-004` |
 | 靜態規則 | `rules/semgrep/financial-security.yml#...`（簽章類偏語意，建議搭配 CodeQL） |
+
+---
+
+## Demo 3 — `OracleManipulationDemo`：預言機操縱 / 陳舊價
+
+攻擊者瞬間拉抬單一行情來源（或系統用到陳舊價）來扭曲結算。
+- **漏洞版**：單一來源、直接用、不看時效 → 以被操縱價結算，定向多賠 ~1000 倍
+- **修復版**：多源中位數（排除離群）＋ 時效窗（拒陳舊）＋ 偏離熔斷（異常暫停）
+- **PoC 成功判據**：結算價偏離公允價 > 10%（INV-ST-03 守恆破壞）
+- 涵蓋 5 個情境：單源操縱、陳舊價、多源異常熔斷、正常結算、未誤殺
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-security-patterns.md#PAT-SEC-105` |
+| 威脅 / 濫用案例 | `threat-catalog.md`（AB-05） |
+| 不變量 | `financial-invariants.md#INV-ST-03` |
+| 回歸語料 | `attack-regression-corpus.md#CORP-005` |
+| 修復對照 | `financial-bug-patterns.md#PAT-BIZ-003`（外部資料不可信防線） |
 
 ---
 
