@@ -368,6 +368,19 @@ long 型金額欄位直接用 * 或 += 聚合
 
 > 註：原 RULE-SEC-001～008（見 `oss-debug-security-loop.md`）是「工具能力」對應；此處 RULE-SEC-101～114 是「金融舞弊模式」對應，兩者不衝突。
 
+#### CodeQL 實作（語意型規則，Semgrep 易誤報者）
+
+下列 4 條需要「同一 callable 內缺少對應防護（鎖/簽章/覆核/速率）」這類語意 + 控制流判斷，已改以 CodeQL 實作於 `rules/codeql/`，並由 `.github/workflows/codeql.yml`（build-mode: none）每次 push/PR 自動執行：
+
+| 規則 | CodeQL 查詢 | precision |
+|------|------------|-----------|
+| RULE-SEC-103 | `rules/codeql/RuleSec103Toctou.ql` | medium |
+| RULE-SEC-104 | `rules/codeql/RuleSec104CallbackNoSignature.ql` | medium |
+| RULE-SEC-108 | `rules/codeql/RuleSec108MakerChecker.ql` | low |
+| RULE-SEC-112 | `rules/codeql/RuleSec112RateLimit.ql` | low |
+
+`rules/codeql/fixtures/CodeqlFixtures.java` 提供命中/不命中對照。低精度者定位為「提示 + 人工覆核」。
+
 ---
 
 ## 偵測效能度量（Detection Metrics）

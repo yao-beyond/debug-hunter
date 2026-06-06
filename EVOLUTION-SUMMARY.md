@@ -104,7 +104,7 @@ for f in knowledge-base/*.md; do head -1 "$f" | grep -q '^---$' || echo "缺 fro
 
 ## 後續 TODO（未做，留待你決定）
 
-- [ ] 將 RULE-SEC-103/104/108/112 等語意型規則以 CodeQL 實作（Semgrep 易誤報）
+- [x] 將 RULE-SEC-103/104/108/112 等語意型規則以 CodeQL 實作 → **`rules/codeql/` 4 條 .ql + fixtures，`.github/workflows/codeql.yml`（build-mode: none）每次 push/PR 自動編譯執行**
 - [x] 把更多 PAT-SEC 條目補上機器可讀 YAML 區塊 → **PAT-SEC-101~114 全 14 條皆有 schema 化 YAML（id/sources/sinks/required_sanitizers/detect/oracle…），demo-backed 者附 poc_ref；INV/MF 引用零斷鏈**
 - [x] demo 擴充攻擊面 → **6 個 demo 涵蓋 PAT-SEC-101/103/104/105/106/107（越權/雙花/偽造回調/預言機/屬性越權/重放），全數實跑通過並納入 CI**
 - [x] 為 Semgrep 規則接 CI gate（push / PR 觸發）→ **`.github/workflows/ci.yml`，每次 push/PR 跑規則測試 + 6 個 demo**

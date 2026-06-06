@@ -1,0 +1,9 @@
+name: debug-hunter/financial-security-codeql
+version: 0.1.0
+library: false
+description: >
+  語意型財務安全規則（Semgrep 易誤報者改以 CodeQL 實作）：
+  RULE-SEC-103 TOCTOU 雙花、RULE-SEC-104 回調缺簽章、
+  RULE-SEC-108 缺 maker-checker、RULE-SEC-112 缺速率/velocity。
+dependencies:
+  codeql/java-all: "*"
