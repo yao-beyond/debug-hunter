@@ -95,11 +95,27 @@ semgrep --config rules/semgrep/financial-security.yml src/
 semgrep --test rules/semgrep/
 ```
 
-### 4. Run the end-to-end demo (see the loop in action)
+### 4. Run the end-to-end demos (see the loop in action)
+6 pure-JDK attack closed-loop demos. Each prints DETECT → REPRODUCE(PoC) → VERIFY, where "PoC success" means a financial invariant is violated (all run in CI on every push):
+
+| Demo | Vulnerability | Dimension | Oracle |
+|------|---------------|-----------|--------|
+| `IdorDemo` | Privilege fund withdrawal (PAT-SEC-101) | internal authz | INV-ST-01 |
+| `PaymentCallbackDemo` | Forged payment callback (PAT-SEC-104) | external trust | INV-T-03 |
+| `OracleManipulationDemo` | Oracle manipulation / stale price (PAT-SEC-105) | data integrity | INV-ST-03 |
+| `DoubleSpendDemo` | TOCTOU double-spend (PAT-SEC-103) | concurrency atomicity | INV-ST-01 |
+| `MassAssignmentDemo` | Mass-assignment balance tamper (PAT-SEC-106) | field whitelist | INV-ST-02/05 |
+| `ReplayDemo` | Request replay (PAT-SEC-107) | time series | INV-T-04 |
+
 ```bash
 cd examples/vulnerable-settlement
-javac IdorDemo.java && java IdorDemo
-# Prints DETECT → REPRODUCE(PoC) → VERIFY for an IDOR fund-withdrawal bug
+javac IdorDemo.java              && java IdorDemo
+javac PaymentCallbackDemo.java   && java PaymentCallbackDemo
+javac OracleManipulationDemo.java&& java OracleManipulationDemo
+javac DoubleSpendDemo.java       && java DoubleSpendDemo
+javac MassAssignmentDemo.java    && java MassAssignmentDemo
+javac ReplayDemo.java            && java ReplayDemo
+# exit 0 = loop holds; per-demo notes in examples/vulnerable-settlement/README.md
 ```
 
 ### 5. Let the knowledge base drive AI diagnosis

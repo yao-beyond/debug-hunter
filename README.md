@@ -96,10 +96,26 @@ semgrep --test rules/semgrep/
 ```
 
 ### 4. 跑端到端 demo（看閉環如何運作）
+6 個純 JDK 攻擊閉環 demo，每個都印出 DETECT → REPRODUCE(PoC) → VERIFY，PoC 成功判據＝違反某條金融不變量（CI 每次自動編譯執行）：
+
+| Demo | 漏洞 | 面向 | 判據 |
+|------|------|------|------|
+| `IdorDemo` | 越權動帳 (PAT-SEC-101) | 內部授權 | INV-ST-01 |
+| `PaymentCallbackDemo` | 偽造支付回調 (PAT-SEC-104) | 外部信任 | INV-T-03 |
+| `OracleManipulationDemo` | 預言機操縱 / 陳舊價 (PAT-SEC-105) | 資料完整性 | INV-ST-03 |
+| `DoubleSpendDemo` | TOCTOU 雙花 (PAT-SEC-103) | 並發原子性 | INV-ST-01 |
+| `MassAssignmentDemo` | 屬性越權改餘額 (PAT-SEC-106) | 欄位白名單 | INV-ST-02/05 |
+| `ReplayDemo` | 請求重放 (PAT-SEC-107) | 時間序列 | INV-T-04 |
+
 ```bash
 cd examples/vulnerable-settlement
-javac IdorDemo.java && java IdorDemo
-# 輸出 DETECT → REPRODUCE(PoC) → VERIFY，示範 IDOR 越權提款的偵測與修復驗收
+javac IdorDemo.java              && java IdorDemo               # 越權動帳
+javac PaymentCallbackDemo.java   && java PaymentCallbackDemo    # 偽造回調
+javac OracleManipulationDemo.java&& java OracleManipulationDemo # 預言機操縱
+javac DoubleSpendDemo.java       && java DoubleSpendDemo        # TOCTOU 雙花
+javac MassAssignmentDemo.java    && java MassAssignmentDemo     # mass assignment
+javac ReplayDemo.java            && java ReplayDemo             # 請求重放
+# exit 0 = 閉環成立；各 demo 說明見 examples/vulnerable-settlement/README.md
 ```
 
 ### 5. 讓知識庫驅動 AI 診斷
