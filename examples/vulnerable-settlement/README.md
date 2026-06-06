@@ -17,6 +17,9 @@ javac PaymentCallbackDemo.java && java PaymentCallbackDemo
 # Demo 3：預言機操縱 / 陳舊價（PAT-SEC-105）
 javac OracleManipulationDemo.java && java OracleManipulationDemo
 
+# Demo 4：TOCTOU 雙花（PAT-SEC-103，真並發）
+javac DoubleSpendDemo.java && java DoubleSpendDemo
+
 # exit 0 = 閉環成立
 ```
 
@@ -72,6 +75,24 @@ javac OracleManipulationDemo.java && java OracleManipulationDemo
 | 不變量 | `financial-invariants.md#INV-ST-03` |
 | 回歸語料 | `attack-regression-corpus.md#CORP-005` |
 | 修復對照 | `financial-bug-patterns.md#PAT-BIZ-003`（外部資料不可信防線） |
+
+---
+
+## Demo 4 — `DoubleSpendDemo`：TOCTOU 雙花（真並發）
+
+攻擊者用並發請求製造「檢查與扣款之間」的競態，繞過餘額檢查超提。
+- **漏洞版**：check-then-act 非原子；用 `CyclicBarrier` 強制 10 個執行緒都先檢查完才扣款 → 全部過檢查 → 金庫從 $100 被提到 **−$900**
+- **修復版**：`synchronized` 讓檢查＋扣款原子（等同 `UPDATE ... WHERE balance >= amt`）→ 僅 1 筆成功、餘額 $0
+- **PoC 成功判據**：INV-ST-01（餘額變負）或成功筆數 > 1
+- 競態用 barrier **穩定復現**（非靠運氣）；多次執行結果一致
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-security-patterns.md#PAT-SEC-103` |
+| 威脅 / 濫用案例 | `threat-catalog.md`（AB-03） |
+| 不變量 | `financial-invariants.md#INV-ST-01` |
+| DB 層修復依據 | `persistence-consistency-controls.md`（原子扣款 / 樂觀鎖） |
+| 回歸語料 | `attack-regression-corpus.md#CORP-003` |
 
 ---
 

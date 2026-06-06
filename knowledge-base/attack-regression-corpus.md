@@ -48,10 +48,12 @@ Authorization: Bearer <UserA_Token>
 
 ---
 
-## 3. 樣本：競態條件 (Race Condition)
+## 3. 樣本：競態條件 / TOCTOU 雙花 (Race Condition)
 - **ID**: CORP-003
-- **描述**: 在 100ms 內發送 50 個相同的提款請求。
-- **驗收標準**: 僅有一筆交易成功，餘額扣減正確。
+- **類型**: PAT-SEC-103 / TOCTOU 雙花
+- **描述**: 並發發送多個相同的提款請求，製造「檢查與扣款之間」的競態。
+- **驗收標準**: 僅有一筆交易成功，餘額不為負（INV-ST-01）。
+- **可執行 PoC**: `examples/vulnerable-settlement/DoubleSpendDemo.java`（CyclicBarrier 穩定復現，CI 每次自動跑）
 
 ---
 
