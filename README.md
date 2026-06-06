@@ -1,4 +1,12 @@
-# Debug-Hunter: AI-Driven Closed-Loop Fintech Debugging Framework
+<p align="center">
+  <img src="docs/logo.jpg" alt="debug-hunter 吉祥物：粉圓 🫧" width="180"/>
+</p>
+
+<h1 align="center">Debug-Hunter</h1>
+<p align="center">
+  <b>AI-Driven Closed-Loop Fintech Debugging Framework</b><br/>
+  <sub>吉祥物：粉圓 🫧 — 像牠盯著泡泡一樣，緊盯每一個金融漏洞</sub>
+</p>
 
 `debug-hunter` 是一個專為金融科技 (Fintech) 打造的 **AI 閉環偵錯框架**。它透過結構化的知識庫 (Knowledge-Base) 指引 AI 智能體完成「**威脅建模 → 偵測 → 定級 → 復現 → 修復 → 驗收 → 回收**」的完整生命週期，專門獵殺**金融與財務安全漏洞**。
 
