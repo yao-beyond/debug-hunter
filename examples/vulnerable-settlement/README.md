@@ -26,6 +26,12 @@ javac MassAssignmentDemo.java && java MassAssignmentDemo
 # Demo 6：請求重放（PAT-SEC-107）
 javac ReplayDemo.java && java ReplayDemo
 
+# Demo 7：排程多 Worker 資料競爭（PAT-SCH-001，真並發）
+javac SchedulerRaceDemo.java && java SchedulerRaceDemo
+
+# Demo 8：委託時間窗口競態（PAT-BIZ-001）
+javac TradingWindowRaceDemo.java && java TradingWindowRaceDemo
+
 # exit 0 = 閉環成立
 ```
 
@@ -135,6 +141,39 @@ javac ReplayDemo.java && java ReplayDemo
 | 威脅 / 濫用案例 | `threat-catalog.md`（AB-07） |
 | 不變量 | `financial-invariants.md#INV-T-04` |
 | 回歸語料 | `attack-regression-corpus.md#CORP-007` |
+
+---
+
+## Demo 7 — `SchedulerRaceDemo`：排程多 Worker 資料競爭（真並發）
+
+分散式排程廣播模式下，多個 Worker 各自撈全量待結算資料並處理。
+- **漏洞版**：4 個 Worker 各結算全部 8 筆 → 每筆被重複結算 4 次
+- **修復版 A**：分片隔離（`id % WORKERS == idx`）→ 每筆恰好一次、全覆蓋
+- **修復版 B**：冪等認領（`claimed.add(id)`）→ 即使全量掃描，單筆只被第一個 Worker 認領
+- **PoC 成功判據**：INV-T-02（同一業務鍵僅產生一次資金效果；重複次數 > 1 即違反）
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-bug-patterns.md#PAT-SCH-001` |
+| 不變量 | `financial-invariants.md#INV-T-02` |
+| 修復規則 | `rules-registry.md#RULE-SCH-001`（分片隔離 + 單筆冪等） |
+
+---
+
+## Demo 8 — `TradingWindowRaceDemo`：委託時間窗口競態
+
+委託在窗口邊界（cutoff）的 check-then-act 競態。
+- **漏洞版**：t=999 檢查窗口開 → 處理延遲到 t=1001（已過 cutoff）→ 用過時 `isOpen` 仍接單
+- **修復版**：決策點以權威時鐘一次取定 `decisionTime`，原子判斷 `decision < cutoff`，過 cutoff 即拒
+- **PoC 成功判據**：已接受委託的決策時間必須 < cutoff；漏洞版接了 decisionTime=1001 的單 → 違反
+- 含負面對照：窗口內（t=500）委託正常接受，未誤殺
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-bug-patterns.md#PAT-BIZ-001` |
+| 不變量 | `financial-invariants.md#INV-T-03 / INV-ST-05` |
+| 修復規則 | `rules-registry.md#RULE-BIZ-003`（權威時鐘 + 原子窗口判斷） |
+| 相關 | `time-window-cutoff-calendar-rules.md`（帳務日/cutoff 歸期） |
 
 ---
 

@@ -38,3 +38,5 @@ jobs:
           javac DoubleSpendDemo.java && java DoubleSpendDemo
           javac MassAssignmentDemo.java && java MassAssignmentDemo
           javac ReplayDemo.java && java ReplayDemo
+          javac SchedulerRaceDemo.java && java SchedulerRaceDemo
+          javac TradingWindowRaceDemo.java && java TradingWindowRaceDemo

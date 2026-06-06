@@ -964,8 +964,9 @@ false_positive_checks: ["是否單機排程或已用分片參數隔離？"]
 confirm_when: ["多 Worker 並行處理同一批資料且無分片/冪等"]
 fix_strategy: "分片鍵隔離（id % shardTotal == shardIndex）+ 單筆冪等鍵 + DB 狀態 CAS"
 rule_ref: RULE-SCH-001
+poc_ref: examples/vulnerable-settlement/SchedulerRaceDemo.java
 created: 2026-06-07
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
@@ -1019,9 +1020,10 @@ false_positive_checks: ["接單是否已用帶窗口條件的原子 SQL？"]
 confirm_when: ["窗口判斷與接單非原子，或 cutoff 邊界歸期不明確"]
 fix_strategy: "伺服器權威時間 + 接單原子條件（WHERE window_open AND now<cutoff）；cutoff 以交易所時區明確歸期"
 rule_ref: RULE-BIZ-003
+poc_ref: examples/vulnerable-settlement/TradingWindowRaceDemo.java
 related: [time-window-cutoff-calendar-rules, PAT-SEC-103]
 created: 2026-06-07
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
