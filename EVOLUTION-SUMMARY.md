@@ -61,7 +61,7 @@
 ### 可執行規則與 demo
 - `rules/semgrep/financial-security.yml` — RULE-SEC-101/102/106/109 + RULE-FIN-003 Semgrep 規則（`semgrep --test` 5/5 通過）
 - `rules/semgrep/financial-security.java` — pass/fail 測試 fixture
-- **6 個端到端閉環 demo**（純 JDK，CI 每次自動編譯執行，皆 exit 0）：
+- **8 個端到端閉環 demo**（純 JDK，CI 每次自動編譯執行，皆 exit 0）：
   | Demo | 漏洞 | 面向 | 判據 |
   |------|------|------|------|
   | `IdorDemo` | 越權動帳 (PAT-SEC-101) | 內部授權 | INV-ST-01 |
@@ -70,6 +70,8 @@
   | `DoubleSpendDemo` | TOCTOU 雙花 (PAT-SEC-103) | 並發原子性 | INV-ST-01 |
   | `MassAssignmentDemo` | 屬性越權改餘額 (PAT-SEC-106) | 欄位白名單 | INV-ST-02/05 |
   | `ReplayDemo` | 請求重放 (PAT-SEC-107) | 時間序列 | INV-T-04 |
+  | `SchedulerRaceDemo` | 排程多 Worker 資料競爭 (PAT-SCH-001) | 排程分片/冪等 | INV-T-02 |
+  | `TradingWindowRaceDemo` | 委託時間窗口競態 (PAT-BIZ-001) | 業務時間窗口 | INV-T-03/ST-05 |
 - `.github/workflows/ci.yml` — CI 跑 Semgrep 規則測試 + 6 個 demo
 
 ### agents

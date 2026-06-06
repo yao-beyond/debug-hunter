@@ -97,7 +97,7 @@ semgrep --test rules/semgrep/
 ```
 
 ### 4. 跑端到端 demo（看閉環如何運作）
-6 個純 JDK 攻擊閉環 demo，每個都印出 DETECT → REPRODUCE(PoC) → VERIFY，PoC 成功判據＝違反某條金融不變量（CI 每次自動編譯執行）：
+8 個純 JDK 攻擊/競態閉環 demo，每個都印出 DETECT → REPRODUCE(PoC) → VERIFY，PoC 成功判據＝違反某條金融不變量（CI 每次自動編譯執行）：
 
 | Demo | 漏洞 | 面向 | 判據 |
 |------|------|------|------|
@@ -107,15 +107,19 @@ semgrep --test rules/semgrep/
 | `DoubleSpendDemo` | TOCTOU 雙花 (PAT-SEC-103) | 並發原子性 | INV-ST-01 |
 | `MassAssignmentDemo` | 屬性越權改餘額 (PAT-SEC-106) | 欄位白名單 | INV-ST-02/05 |
 | `ReplayDemo` | 請求重放 (PAT-SEC-107) | 時間序列 | INV-T-04 |
+| `SchedulerRaceDemo` | 排程多 Worker 資料競爭 (PAT-SCH-001) | 排程分片/冪等 | INV-T-02 |
+| `TradingWindowRaceDemo` | 委託時間窗口競態 (PAT-BIZ-001) | 業務時間窗口 | INV-T-03/ST-05 |
 
 ```bash
 cd examples/vulnerable-settlement
-javac IdorDemo.java              && java IdorDemo               # 越權動帳
-javac PaymentCallbackDemo.java   && java PaymentCallbackDemo    # 偽造回調
-javac OracleManipulationDemo.java&& java OracleManipulationDemo # 預言機操縱
-javac DoubleSpendDemo.java       && java DoubleSpendDemo        # TOCTOU 雙花
-javac MassAssignmentDemo.java    && java MassAssignmentDemo     # mass assignment
-javac ReplayDemo.java            && java ReplayDemo             # 請求重放
+javac IdorDemo.java               && java IdorDemo               # 越權動帳
+javac PaymentCallbackDemo.java    && java PaymentCallbackDemo    # 偽造回調
+javac OracleManipulationDemo.java && java OracleManipulationDemo # 預言機操縱
+javac DoubleSpendDemo.java        && java DoubleSpendDemo        # TOCTOU 雙花
+javac MassAssignmentDemo.java     && java MassAssignmentDemo     # mass assignment
+javac ReplayDemo.java             && java ReplayDemo             # 請求重放
+javac SchedulerRaceDemo.java      && java SchedulerRaceDemo      # 排程資料競爭
+javac TradingWindowRaceDemo.java  && java TradingWindowRaceDemo  # 委託窗口競態
 # exit 0 = 閉環成立；各 demo 說明見 examples/vulnerable-settlement/README.md
 ```
 

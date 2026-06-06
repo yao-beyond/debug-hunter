@@ -97,7 +97,7 @@ semgrep --test rules/semgrep/
 ```
 
 ### 4. Run the end-to-end demos (see the loop in action)
-6 pure-JDK attack closed-loop demos. Each prints DETECT → REPRODUCE(PoC) → VERIFY, where "PoC success" means a financial invariant is violated (all run in CI on every push):
+8 pure-JDK attack/race closed-loop demos. Each prints DETECT → REPRODUCE(PoC) → VERIFY, where "PoC success" means a financial invariant is violated (all run in CI on every push):
 
 | Demo | Vulnerability | Dimension | Oracle |
 |------|---------------|-----------|--------|
@@ -107,15 +107,19 @@ semgrep --test rules/semgrep/
 | `DoubleSpendDemo` | TOCTOU double-spend (PAT-SEC-103) | concurrency atomicity | INV-ST-01 |
 | `MassAssignmentDemo` | Mass-assignment balance tamper (PAT-SEC-106) | field whitelist | INV-ST-02/05 |
 | `ReplayDemo` | Request replay (PAT-SEC-107) | time series | INV-T-04 |
+| `SchedulerRaceDemo` | Scheduler multi-worker data race (PAT-SCH-001) | sharding/idempotency | INV-T-02 |
+| `TradingWindowRaceDemo` | Order time-window race (PAT-BIZ-001) | business time window | INV-T-03/ST-05 |
 
 ```bash
 cd examples/vulnerable-settlement
-javac IdorDemo.java              && java IdorDemo
-javac PaymentCallbackDemo.java   && java PaymentCallbackDemo
-javac OracleManipulationDemo.java&& java OracleManipulationDemo
-javac DoubleSpendDemo.java       && java DoubleSpendDemo
-javac MassAssignmentDemo.java    && java MassAssignmentDemo
-javac ReplayDemo.java            && java ReplayDemo
+javac IdorDemo.java               && java IdorDemo
+javac PaymentCallbackDemo.java    && java PaymentCallbackDemo
+javac OracleManipulationDemo.java && java OracleManipulationDemo
+javac DoubleSpendDemo.java        && java DoubleSpendDemo
+javac MassAssignmentDemo.java     && java MassAssignmentDemo
+javac ReplayDemo.java             && java ReplayDemo
+javac SchedulerRaceDemo.java      && java SchedulerRaceDemo
+javac TradingWindowRaceDemo.java  && java TradingWindowRaceDemo
 # exit 0 = loop holds; per-demo notes in examples/vulnerable-settlement/README.md
 ```
 
