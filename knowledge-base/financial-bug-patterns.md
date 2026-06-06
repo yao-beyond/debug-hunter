@@ -53,6 +53,34 @@ external_refs: ["CWE-681", "CWE-190", "CWE-362"]
 
 ## PAT-FIN-002：double/float 處理金額
 
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；correctness 類）↓↓↓ -->
+```yaml
+id: PAT-FIN-002
+title: double/float 處理金額
+status: active
+confidence: high
+severity_base: P0
+category: correctness
+applies_to: [amount, rate, fee, balance]
+cwe: [CWE-681, CWE-1339]
+antipattern:
+  - "double/float 型別的金額欄位"
+  - "BigDecimal.doubleValue() 後再計算"
+  - "金額用 == 比較"
+detect:
+  static_queries:
+    - "欄位名 ~ amount|price|fee|profit|balance|rate 且型別為 double/float/Double/Float"
+    - "金融數值用 == 比較"
+false_positive_checks: ["是否為非金額用途的 double（比例顯示/統計）？"]
+confirm_when: ["金額/比率/餘額以 double/float 儲存或參與計算"]
+fix_strategy: "全程 BigDecimal；比較用 compareTo"
+rule_ref: RULE-FIN-003
+semgrep_ref: rules/semgrep/financial-security.yml#no-double-float-for-money
+created: 2026-06-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
 **描述**：
 使用 `double` 或 `float` 型別儲存或計算金融數值，導致浮點精度誤差累積。單筆誤差可能極小，但在高流量下大量累加後，誤差可達數元甚至更多。
 
@@ -85,6 +113,28 @@ if (amount1.compareTo(amount2) == 0) { ... }
 ---
 
 ## PAT-FIN-003：BigDecimal.equals() 比較
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；correctness 類）↓↓↓ -->
+```yaml
+id: PAT-FIN-003
+title: BigDecimal.equals() 比較
+status: active
+confidence: high
+severity_base: P1
+category: correctness
+applies_to: [amount, fee]
+cwe: [CWE-697]
+antipattern: ["BigDecimal 變數呼叫 .equals()（含與 ZERO 比較）"]
+detect:
+  static_queries: ["BigDecimal 型別呼叫 .equals()"]
+false_positive_checks: ["是否確為 BigDecimal（非其他型別 equals）？"]
+confirm_when: ["BigDecimal 用 equals 比較數值（scale 敏感）"]
+fix_strategy: "改用 compareTo() == 0"
+rule_ref: RULE-FIN-004
+created: 2026-06-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
 **描述**：
 `BigDecimal.equals()` 同時比較數值與 scale，導致 `1.0.equals(1.00)` 回傳 `false`，在金額比較邏輯中產生隱性錯誤。
@@ -421,6 +471,29 @@ public void markError() {
 
 ## PAT-FIN-005：多資產精度硬編碼 scale
 
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；correctness 類）↓↓↓ -->
+```yaml
+id: PAT-FIN-005
+title: 多資產精度硬編碼 scale
+status: active
+confidence: medium
+severity_base: P0
+category: correctness
+applies_to: [multi-asset, settlement]
+cwe: [CWE-681]
+invariants: [INV-TXN-02]
+antipattern: ["setScale(<常數>, ...) 對所有資產一視同仁"]
+detect:
+  static_queries: ["setScale(常數,...) 在金額路徑，scale 非來自資產中繼資料"]
+false_positive_checks: ["scale 是否來自 assetMeta.getScale / coinConfig？"]
+confirm_when: ["金額精度硬編碼常數，未依資產定義（BTC 8 / JPY 0）"]
+fix_strategy: "scale 由資產中繼資料決定 + 入庫精度校驗"
+rule_ref: RULE-FIN-006
+created: 2026-06-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
 **描述**：
 不同資產的小數精度不同（BTC 8 位、USDT 6 位、JPY 0 位、TWD 0 位）。程式中硬編碼 `setScale(8, ...)` 對所有資產一視同仁，導致：對 JPY 產生不存在的小數、對需要 8 位的幣別被截斷、跨幣別比較與加總出錯。settlement-checklist A 類「統一 scale 8 位」本身在多資產系統就是個錯誤假設。
 
@@ -447,6 +520,29 @@ if (amount.stripTrailingZeros().scale() > scale)
 ---
 
 ## PAT-FIN-006：分配/拆分捨入殘差未處理（salami slicing）
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；correctness 類）↓↓↓ -->
+```yaml
+id: PAT-FIN-006
+title: 分配/拆分捨入殘差未處理（salami slicing）
+status: active
+confidence: medium
+severity_base: P0
+category: correctness
+applies_to: [allocation, split, distribution, refund]
+cwe: [CWE-682, CWE-1339]
+invariants: [INV-TXN-05, INV-ST-03]
+antipattern: ["迴圈內逐項 total×ratio 捨入後入帳，迴圈後無 Σ=total 校驗"]
+detect:
+  static_queries: ["分配迴圈 setScale 後無總和守恆斷言/殘差歸位"]
+false_positive_checks: ["是否有最後一方吃殘差 / Σ 斷言？"]
+confirm_when: ["一拆多金額運算後總和可能 != 原額"]
+fix_strategy: "最大餘額法 / 殘差歸位（last-takes-remainder）+ 總和守恆斷言"
+rule_ref: RULE-FIN-007
+created: 2026-06-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
 **描述**：
 把一筆總額分配給多方（分潤、拆單、按比例退款）時，各方 `總額 × 比例` 個別捨入後，加總**不等於**原總額，產生殘差（少了/多了 1 個最小單位）。殘差若無明確歸屬，長期累積即「salami slicing」吞錢或造錢，且違反守恆。
@@ -484,6 +580,32 @@ assert allocated.compareTo(total) == 0;                   // INV-TXN-05
 
 ## PAT-FIN-007：時間戳單位混淆（ms/s）與時區邊界
 
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；correctness 類）↓↓↓ -->
+```yaml
+id: PAT-FIN-007
+title: 時間戳單位混淆（ms/s）與時區邊界
+status: active
+confidence: medium
+severity_base: P1
+category: correctness
+applies_to: [settlement, interest, quote]
+cwe: [CWE-685, CWE-367]
+invariants: [INV-T-03]
+antipattern:
+  - "裸 long 時間戳跨方法傳遞（ms/s 不明）"
+  - "LocalDate.now() / 系統預設時區計算結算日"
+detect:
+  static_queries: ["秒/毫秒混用；用系統預設時區計算帳務日"]
+false_positive_checks: ["單位是否型別化（Instant）/ 時區是否固定？"]
+confirm_when: ["時間戳單位不明或結算日用系統時區"]
+fix_strategy: "單位型別化（Instant）+ 固定業務/交易所時區"
+rule_ref: RULE-FIN-008
+related: time-window-cutoff-calendar-rules
+created: 2026-06-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
 **描述**：
 結算依賴時間戳判定開盤/收盤、T+1、利息計息日。秒（10 位）與毫秒（13 位）混用，或用系統預設時區處理跨日邊界，導致取錯價格區間、結算日歸屬錯誤、DST 當天計息錯誤。PAT-BIZ-003 的 `fetchQuote(code, ts)` 即潛在風險點。
 
@@ -513,6 +635,28 @@ LocalDate settleDate = ts.atZone(EXCHANGE_ZONE).toLocalDate();
 ---
 
 ## PAT-FIN-008：金額以最小單位存 long 的整數溢位
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；correctness 類）↓↓↓ -->
+```yaml
+id: PAT-FIN-008
+title: 金額以最小單位存 long 的整數溢位
+status: active
+confidence: medium
+severity_base: P1
+category: correctness
+applies_to: [amount-minor-unit, aggregation]
+cwe: [CWE-190]
+antipattern: ["long 金額直接 × 或 += 聚合，無溢位防護"]
+detect:
+  static_queries: ["long 型金額用 * 或 += 聚合，未用 Math.*Exact / BigInteger / BigDecimal"]
+false_positive_checks: ["金額量級是否遠小於 Long.MAX？聚合是否已用 BigInteger？"]
+confirm_when: ["long 金額乘法/大量聚合無溢位防護"]
+fix_strategy: "Math.multiplyExact/addExact 或 BigInteger/BigDecimal 聚合"
+rule_ref: RULE-FIN-009
+created: 2026-06-01
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 
 **描述**：
 為效能改用 `long`（聰）儲存金額。大額聚合（總資產、平台總額、批次加總）可能超過 `Long.MAX_VALUE`，或乘法中間值溢位，靜默回繞成負/錯值。
