@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/Semgrep-rules%205%2F5-1B87C9.svg" alt="Semgrep rules 5/5"/>
 </p>
 
-<p align="center"><a href="README.md">繁體中文</a> | <b>English</b></p>
+<p align="center"><a href="README.md">正體中文</a> | <b>English</b></p>
 
 `debug-hunter` is an **AI closed-loop debugging framework** built for fintech. A structured Knowledge Base guides an AI agent through the full lifecycle — **Threat-Model → Detect → Triage → Reproduce → Fix → Verify → Recycle** — to hunt down **financial and financial-security vulnerabilities**.
 
