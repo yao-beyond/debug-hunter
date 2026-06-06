@@ -97,7 +97,7 @@ semgrep --test rules/semgrep/
 ```
 
 ### 4. Run the end-to-end demos (see the loop in action)
-9 pure-JDK attack/race closed-loop demos. Each prints DETECT → REPRODUCE(PoC) → VERIFY, where "PoC success" means a financial invariant is violated (all run in CI on every push):
+10 pure-JDK attack/race/precision closed-loop demos. Each prints DETECT → REPRODUCE(PoC) → VERIFY, where "PoC success" means a financial invariant (or numeric exactness) is violated (all run in CI on every push):
 
 | Demo | Vulnerability | Dimension | Oracle |
 |------|---------------|-----------|--------|
@@ -110,6 +110,7 @@ semgrep --test rules/semgrep/
 | `SchedulerRaceDemo` | Scheduler multi-worker data race (PAT-SCH-001) | sharding/idempotency | INV-T-02 |
 | `TradingWindowRaceDemo` | Order time-window race (PAT-BIZ-001) | business time window | INV-T-03/ST-05 |
 | `LockTtlDemo` | Distributed-lock TTL defect (PAT-CON-003) | lock mutual-exclusion | INV-T-02 |
+| `FloatMoneyDemo` | double/float for money (PAT-FIN-002) | numeric precision | exactness |
 
 ```bash
 cd examples/vulnerable-settlement
@@ -122,6 +123,7 @@ javac ReplayDemo.java             && java ReplayDemo
 javac SchedulerRaceDemo.java      && java SchedulerRaceDemo
 javac TradingWindowRaceDemo.java  && java TradingWindowRaceDemo
 javac LockTtlDemo.java            && java LockTtlDemo
+javac FloatMoneyDemo.java         && java FloatMoneyDemo
 # exit 0 = loop holds; per-demo notes in examples/vulnerable-settlement/README.md
 ```
 

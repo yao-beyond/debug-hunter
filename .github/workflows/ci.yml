@@ -41,3 +41,4 @@ jobs:
           javac SchedulerRaceDemo.java && java SchedulerRaceDemo
           javac TradingWindowRaceDemo.java && java TradingWindowRaceDemo
           javac LockTtlDemo.java && java LockTtlDemo
+          javac FloatMoneyDemo.java && java FloatMoneyDemo

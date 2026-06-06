@@ -76,8 +76,9 @@ confirm_when: ["金額/比率/餘額以 double/float 儲存或參與計算"]
 fix_strategy: "全程 BigDecimal；比較用 compareTo"
 rule_ref: RULE-FIN-003
 semgrep_ref: rules/semgrep/financial-security.yml#no-double-float-for-money
+poc_ref: examples/vulnerable-settlement/FloatMoneyDemo.java
 created: 2026-06-01
-reproduced_count: 0
+reproduced_count: 1
 ```
 <!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
 

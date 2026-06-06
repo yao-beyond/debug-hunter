@@ -97,7 +97,7 @@ semgrep --test rules/semgrep/
 ```
 
 ### 4. 跑端到端 demo（看閉環如何運作）
-9 個純 JDK 攻擊/競態閉環 demo，每個都印出 DETECT → REPRODUCE(PoC) → VERIFY，PoC 成功判據＝違反某條金融不變量（CI 每次自動編譯執行）：
+10 個純 JDK 攻擊/競態/精度閉環 demo，每個都印出 DETECT → REPRODUCE(PoC) → VERIFY，PoC 成功判據＝違反某條金融不變量或精確性（CI 每次自動編譯執行）：
 
 | Demo | 漏洞 | 面向 | 判據 |
 |------|------|------|------|
@@ -110,6 +110,7 @@ semgrep --test rules/semgrep/
 | `SchedulerRaceDemo` | 排程多 Worker 資料競爭 (PAT-SCH-001) | 排程分片/冪等 | INV-T-02 |
 | `TradingWindowRaceDemo` | 委託時間窗口競態 (PAT-BIZ-001) | 業務時間窗口 | INV-T-03/ST-05 |
 | `LockTtlDemo` | 分散式鎖 TTL 缺陷 (PAT-CON-003) | 鎖互斥 | INV-T-02 |
+| `FloatMoneyDemo` | double/float 處理金額 (PAT-FIN-002) | 數值精度 | 精確一致 |
 
 ```bash
 cd examples/vulnerable-settlement
@@ -122,6 +123,7 @@ javac ReplayDemo.java             && java ReplayDemo             # 請求重放
 javac SchedulerRaceDemo.java      && java SchedulerRaceDemo      # 排程資料競爭
 javac TradingWindowRaceDemo.java  && java TradingWindowRaceDemo  # 委託窗口競態
 javac LockTtlDemo.java            && java LockTtlDemo            # 分散式鎖 TTL
+javac FloatMoneyDemo.java         && java FloatMoneyDemo         # double/float 金額
 # exit 0 = 閉環成立；各 demo 說明見 examples/vulnerable-settlement/README.md
 ```
 

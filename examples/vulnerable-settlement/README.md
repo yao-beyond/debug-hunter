@@ -35,6 +35,9 @@ javac TradingWindowRaceDemo.java && java TradingWindowRaceDemo
 # Demo 9：分散式鎖 TTL 設計缺陷（PAT-CON-003）
 javac LockTtlDemo.java && java LockTtlDemo
 
+# Demo 10：double/float 處理金額（PAT-FIN-002）
+javac FloatMoneyDemo.java && java FloatMoneyDemo
+
 # exit 0 = 閉環成立
 ```
 
@@ -193,6 +196,22 @@ javac LockTtlDemo.java && java LockTtlDemo
 | 漏洞模式 | `financial-bug-patterns.md#PAT-CON-003` |
 | 不變量 | `financial-invariants.md#INV-T-02` |
 | 修復規則 | `rules-registry.md#RULE-CON-008`（TTL>業務時間 + watchdog + 持有者校驗釋放） |
+
+---
+
+## Demo 10 — `FloatMoneyDemo`：double/float 處理金額
+
+示範浮點精度誤差累積，以及修復版全程 BigDecimal 的精確性。
+- **漏洞版**：`double` 累加 0.01 共 100 萬次 → 偏離 10000.00（誤差 ~1.7e-7）；`0.1 + 0.2 == 0.3` 為 false
+- **修復版**：全程 `BigDecimal`（字串建構）+ `compareTo` → 累加精確、比較正確
+- **對照**：即使來源是 BigDecimal，中途 `doubleValue()` 後計算仍會把浮點誤差引回
+- **PoC 成功判據**：double 結果偏離精確值（單筆極小，高流量累加後侵蝕 INV-ST-03 守恆）
+
+| 階段 | 對應知識檔 |
+|------|-----------|
+| 漏洞模式 | `financial-bug-patterns.md#PAT-FIN-002` |
+| 靜態規則 | `rules/semgrep/financial-security.yml#no-double-float-for-money`（RULE-FIN-003） |
+| 相關不變量 | `financial-invariants.md#INV-ST-03`（累積守恆） |
 
 ---
 
