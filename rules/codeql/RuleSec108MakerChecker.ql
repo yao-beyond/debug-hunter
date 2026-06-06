@@ -26,7 +26,7 @@ predicate isAdminAdjustEndpoint(Method m) {
     m.getName().toLowerCase().matches(["%adjust%", "%manual%", "%compensat%", "%correct%"])
     or
     exists(StringLiteral s |
-      s = m.getAnAnnotation().getAValue() and
+      s = m.getAnAnnotation().getValue(_) and
       s.getValue().toLowerCase().matches(["%/admin/%", "%adjust%", "%compensat%"])
     )
   )

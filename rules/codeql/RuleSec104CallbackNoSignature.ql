@@ -27,7 +27,7 @@ predicate isCallbackEndpoint(Method m) {
     m.getName().toLowerCase().matches(["%callback%", "%notify%", "%webhook%"])
     or
     exists(StringLiteral s |
-      s = m.getAnAnnotation().getAValue() and
+      s = m.getAnAnnotation().getValue(_) and
       s.getValue().toLowerCase().matches(["%callback%", "%notify%", "%webhook%"])
     )
   )
