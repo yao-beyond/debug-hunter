@@ -8,6 +8,14 @@
   <sub>Mascot: Fenyuan 🫧 — locked onto every financial bug the way she's locked onto that bubble</sub>
 </p>
 
+<p align="center">
+  <a href="https://github.com/yao-beyond/debug-hunter/actions/workflows/ci.yml"><img src="https://github.com/yao-beyond/debug-hunter/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
+  <img src="https://img.shields.io/badge/Java-21-orange.svg" alt="Java 21"/>
+  <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F.svg" alt="Spring Boot 3"/>
+  <img src="https://img.shields.io/badge/Semgrep-rules%205%2F5-1B87C9.svg" alt="Semgrep rules 5/5"/>
+</p>
+
 <p align="center"><a href="README.md">繁體中文</a> | <b>English</b></p>
 
 `debug-hunter` is an **AI closed-loop debugging framework** built for fintech. A structured Knowledge Base guides an AI agent through the full lifecycle — **Threat-Model → Detect → Triage → Reproduce → Fix → Verify → Recycle** — to hunt down **financial and financial-security vulnerabilities**.

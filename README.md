@@ -8,6 +8,14 @@
   <sub>吉祥物：粉圓 🫧 — 像牠盯著泡泡一樣，緊盯每一個金融漏洞</sub>
 </p>
 
+<p align="center">
+  <a href="https://github.com/yao-beyond/debug-hunter/actions/workflows/ci.yml"><img src="https://github.com/yao-beyond/debug-hunter/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
+  <img src="https://img.shields.io/badge/Java-21-orange.svg" alt="Java 21"/>
+  <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F.svg" alt="Spring Boot 3"/>
+  <img src="https://img.shields.io/badge/Semgrep-rules%205%2F5-1B87C9.svg" alt="Semgrep rules 5/5"/>
+</p>
+
 <p align="center"><b>繁體中文</b> | <a href="README.en.md">English</a></p>
 
 `debug-hunter` 是一個專為金融科技 (Fintech) 打造的 **AI 閉環偵錯框架**。它透過結構化的知識庫 (Knowledge-Base) 指引 AI 智能體完成「**威脅建模 → 偵測 → 定級 → 復現 → 修復 → 驗收 → 回收**」的完整生命週期，專門獵殺**金融與財務安全漏洞**。

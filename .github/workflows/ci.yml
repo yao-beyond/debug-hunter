@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  semgrep-rules:
+    name: Semgrep rule tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Semgrep
+        run: pip install semgrep
+      - name: Validate & test rules (pass/fail fixtures)
+        run: semgrep --test --config rules/semgrep rules/semgrep
+
+  e2e-demo:
+    name: End-to-end demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Compile & run IDOR closed-loop demo
+        run: |
+          cd examples/vulnerable-settlement
+          javac IdorDemo.java
+          java IdorDemo
