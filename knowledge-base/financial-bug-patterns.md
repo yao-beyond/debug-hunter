@@ -41,7 +41,7 @@ external_refs: ["CWE-681", "CWE-190", "CWE-362"]
 | PAT-FIN-008 | 金額以最小單位存 long 的整數溢位 | P1 | 設計審查 | — |
 | PAT-CON-001 | Kafka 消費者缺乏冪等保護 | P0 | 壓力測試 · SettlementFlow.java | 2 🆕 |
 | PAT-CON-002 | @Transactional 靜默失效 | P0 | 代碼審查 | — |
-| PAT-CON-003 | 分散式鎖 TTL 設計缺陷 | P1 | 事後檢視 | — |
+| PAT-CON-003 | 分散式鎖 TTL 設計缺陷 | P1 | 事後檢視 | 1 🆕 |
 | PAT-CON-004 | 錢包批量讀取後並發更新無行鎖 | P0 | SettlementFlow.java | 1 🆕 |
 | PAT-CON-005 | Retry 場景狀態標記非冪等設計 | P1 | SettlementFlow.java | 1 🆕 |
 | PAT-SCH-001 | PowerJob 多 Worker 資料競爭 | P1 | 壓力測試 | — |

@@ -73,7 +73,7 @@
   | `SchedulerRaceDemo` | 排程多 Worker 資料競爭 (PAT-SCH-001) | 排程分片/冪等 | INV-T-02 |
   | `TradingWindowRaceDemo` | 委託時間窗口競態 (PAT-BIZ-001) | 業務時間窗口 | INV-T-03/ST-05 |
   | `LockTtlDemo` | 分散式鎖 TTL 缺陷 (PAT-CON-003) | 鎖互斥 | INV-T-02 |
-- `.github/workflows/ci.yml` — CI 跑 Semgrep 規則測試 + 6 個 demo
+- `.github/workflows/ci.yml` — CI 跑 Semgrep 規則測試 + 9 個 demo
 
 ### agents
 - `agents/threat-modeler.md`, `agents/security-fraud-detector.md`
@@ -113,8 +113,8 @@ for f in knowledge-base/*.md; do head -1 "$f" | grep -q '^---$' || echo "缺 fro
       `financial-security-patterns` PAT-SEC-101~114（14 條，taint 導向：sources/sinks/required_sanitizers/detect/oracle，demo-backed 附 poc_ref）
       + `financial-bug-patterns` PAT-FIN/CON/SCH/BIZ（16 條，correctness/concurrency/business：antipattern/detect/false_positive_checks/fix_strategy）；
       RULE/INV/MF/SCENE 交叉引用零斷鏈
-- [x] demo 擴充攻擊面 → **6 個 demo 涵蓋 PAT-SEC-101/103/104/105/106/107（越權/雙花/偽造回調/預言機/屬性越權/重放），全數實跑通過並納入 CI**
-- [x] 為 Semgrep 規則接 CI gate（push / PR 觸發）→ **`.github/workflows/ci.yml`，每次 push/PR 跑規則測試 + 6 個 demo**
+- [x] demo 擴充攻擊面 → **9 個 demo 涵蓋 PAT-SEC-101/103/104/105/106/107 + PAT-SCH-001 + PAT-BIZ-001 + PAT-CON-003（越權/雙花/偽造回調/預言機/屬性越權/重放/排程競爭/委託窗口/鎖TTL），全數實跑通過並納入 CI**
+- [x] 為 Semgrep 規則接 CI gate（push / PR 觸發）→ **`.github/workflows/ci.yml`，每次 push/PR 跑規則測試 + 9 個 demo**
 - [ ] money-flow-map 以實際專案金流補齊（目前為範本骨架）
 - [x] 安裝 semgrep 後實跑 `--test` 驗證規則 fixture → **semgrep 1.144.0 `--test` 5/5 規則通過、0 失敗、exit 0；直接掃描確認 finding 全部命中 vuln 行、安全行零誤報**
 - [x] 統一測試/語料命名 → property test 用 `PBT-FIN-01~03`、回歸語料用 `CORP-001~007`，全庫零殘留舊命名

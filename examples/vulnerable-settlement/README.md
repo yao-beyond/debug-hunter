@@ -201,4 +201,4 @@ javac LockTtlDemo.java && java LockTtlDemo
 - **PoC「成功」的定義 = 不變量被違反**，不是「丟例外」——這是安全驗收與功能測試的關鍵差異。
 - 每個 demo 都附**負面對照**（正常流程應成功 / 冪等），確保修復未誤殺正常路徑，呼應 `finding-evidence-standard.md` 的降誤報精神。
 - 真實系統請改用 Spring `@RestController` + MyBatis；邏輯與這些 demo 等價。
-- 兩個 demo 都在 CI（`.github/workflows/ci.yml`）中每次 push 自動編譯執行。
+- 9 個 demo 都在 CI（`.github/workflows/ci.yml`）中每次 push 自動編譯執行。
