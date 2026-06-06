@@ -403,6 +403,40 @@ long 型金額欄位直接用 * 或 += 聚合
 
 ---
 
+## 補齊規則（索引模式專節化，v2.1）
+
+對應 financial-bug-patterns.md 新補專節的 4 條 PAT：
+
+### RULE-FIN-005：BigDecimal.divide() 必須指定 scale 與 RoundingMode
+**來源模式**：PAT-FIN-004 · **嚴重等級**：MAJOR · **引擎**：Semgrep / SpotBugs
+```
+BigDecimal.divide() 呼叫引數數量 < 3（缺 scale + RoundingMode）
+```
+**修復**：`a.divide(b, scale, RoundingMode.HALF_UP)`（SonarQube 對應 java:S2164 類）
+
+### RULE-CON-008：分散式鎖須 TTL>業務時間 + 持有者校驗釋放
+**來源模式**：PAT-CON-003 · **嚴重等級**：MAJOR · **引擎**：人工 / Semgrep
+```
+setIfAbsent 固定短 TTL 後執行長業務；或 finally 直接 delete(lockKey) 未比對持有者 value
+```
+**修復**：watchdog 續租或 TTL>最長執行時間；釋放用 Lua 校驗 value==token
+
+### RULE-SCH-001：分散式排程須分片隔離 + 單筆冪等
+**來源模式**：PAT-SCH-001 · **嚴重等級**：MAJOR · **引擎**：人工
+```
+排程 handler 撈 pending 全量後處理，未依 shardIndex/shardTotal 取模隔離，且無冪等鍵/狀態 CAS
+```
+**修復**：分片鍵隔離 + 單筆冪等鍵 + 狀態 CAS（對應不變量 INV-T-02）
+
+### RULE-BIZ-003：交易窗口判斷與接單須原子且用權威時鐘
+**來源模式**：PAT-BIZ-001 · **嚴重等級**：MAJOR · **引擎**：人工
+```
+isOpen()/inWindow() 檢查與 accept 接單非原子；或用系統本地時間/前端時間判斷窗口、cutoff
+```
+**修復**：權威時鐘 + 接單原子條件（WHERE now<cutoff AND window_open），cutoff 以交易所時區歸期
+
+---
+
 ## 規則健康度追蹤
 
 | 規則代碼 | 規則摘要 | 最後觸發 | 觸發次數 | 攔截 Bug | 狀態 |
@@ -436,6 +470,11 @@ long 型金額欄位直接用 * 或 += 聚合
 | RULE-SEC-112 | 金流端點速率 / velocity 限制 | — | 0 | 0 | 🆕 就緒 |
 | RULE-SEC-113 | 優惠互斥 / 上限 / 一次性 | — | 0 | 0 | 🆕 就緒 |
 | RULE-SEC-114 | 冪等鍵高熵不可預測 | — | 0 | 0 | 🆕 就緒 |
+| RULE-FIN-005 | divide() 必須指定 scale+RoundingMode | — | 0 | 0 | 🆕 就緒 |
+| RULE-CON-008 | 分散式鎖 TTL + 持有者校驗釋放 | — | 0 | 0 | 🆕 就緒 |
+| RULE-SCH-001 | 排程分片隔離 + 單筆冪等 | — | 0 | 0 | 🆕 就緒 |
+| RULE-BIZ-003 | 交易窗口原子判斷 + 權威時鐘 | — | 0 | 0 | 🆕 就緒 |
 
-> 最後更新：v2.0 財務安全進化（2026-06）· 新增 RULE-FIN-006~009 + RULE-SEC-101~114（共 18 條）· 累計攔截 Bug：5 個
+> 最後更新：v2.1（2026-06）· 補齊 RULE-FIN-005 / RULE-CON-008 / RULE-SCH-001 / RULE-BIZ-003（對應索引模式專節化）· 累計攔截 Bug：5 個
+> v2.0：新增 RULE-FIN-006~009 + RULE-SEC-101~114（共 18 條）。
 > 規則分類擴充：新增 `RULE-SEC-1xx`（財務舞弊 taint 規則），與 `financial-security-patterns.md`、`financial-invariants.md` 三位一體。

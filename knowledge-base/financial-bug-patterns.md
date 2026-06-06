@@ -840,6 +840,215 @@ BigInteger total = amounts.stream().map(BigInteger::valueOf)
 
 ---
 
+## PAT-FIN-004：divide() 未指定 RoundingMode
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；correctness 類）↓↓↓ -->
+```yaml
+id: PAT-FIN-004
+title: divide() 未指定 RoundingMode
+status: active
+confidence: high
+severity_base: P1
+category: correctness
+applies_to: [rate, fee, allocation, settlement]
+cwe: [CWE-682, CWE-248]
+antipattern:
+  - "BigDecimal.divide(divisor) 未指定 scale 與 RoundingMode"
+  - "divide 只給 RoundingMode 未給 scale（沿用左運算元 scale，非預期）"
+detect:
+  static_queries: ["BigDecimal.divide() 呼叫的引數數量 < 3（缺 scale+RoundingMode）"]
+false_positive_checks: ["除數是否恆為 10 的次方（可整除，理論上不拋）？仍建議顯式 scale"]
+confirm_when: ["金額/比率除法未明確 scale + RoundingMode"]
+fix_strategy: "divide(divisor, scale, RoundingMode.HALF_UP)，scale 依資產精度"
+rule_ref: RULE-FIN-005
+created: 2026-06-07
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
+**描述**：
+`BigDecimal.divide(divisor)` 未指定 scale 與 RoundingMode 時，若除不盡會拋 `ArithmeticException: Non-terminating decimal expansion`，導致結算流程中斷；即使只給 RoundingMode 而未給 scale，也會沿用左運算元的 scale，產生非預期精度。
+
+**觸發特徵**：
+```java
+BigDecimal rate = profit.divide(principal);                 // ← 除不盡直接拋例外
+BigDecimal x = a.divide(b, RoundingMode.HALF_UP);           // ← 未定 scale，精度不可控
+```
+
+**修復策略**：
+```java
+BigDecimal rate = profit.divide(principal, 8, RoundingMode.HALF_UP); // 明確 scale + mode
+```
+
+**反哺規則**：RULE-FIN-005
+
+---
+
+## PAT-CON-003：分散式鎖 TTL 設計缺陷
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；concurrency 類）↓↓↓ -->
+```yaml
+id: PAT-CON-003
+title: 分散式鎖 TTL 設計缺陷
+status: active
+confidence: medium
+severity_base: P1
+category: concurrency
+applies_to: [distributed-lock, settlement, scheduler]
+cwe: [CWE-667, CWE-362]
+invariants: [INV-T-02]
+antipattern:
+  - "鎖 TTL 固定且短於業務執行時間（鎖提前過期）"
+  - "無 watchdog 自動續租"
+  - "釋放鎖未校驗持有者 token（finally 直接 del 誤刪他人鎖）"
+detect:
+  static_queries:
+    - "setIfAbsent(key, v, 固定短 TTL) 後執行長業務"
+    - "finally 區塊直接 redis.delete(lockKey)，未比對持有者 value"
+false_positive_checks: ["是否使用 Redisson 等自帶 watchdog 續租？"]
+confirm_when: ["鎖 TTL < 最長業務時間，或釋放未校驗持有者"]
+fix_strategy: "TTL > 最長執行時間 + watchdog 續租；釋放用 Lua 校驗 value==token 才 del"
+rule_ref: RULE-CON-008
+created: 2026-06-07
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
+**描述**：
+分散式鎖（Redis SETNX / Redisson）的 TTL 設計不當：TTL 短於業務執行時間 → 鎖在業務完成前過期，第二個節點取得鎖進入臨界區，造成並發動帳；或缺 watchdog 續租；或釋放鎖時未校驗持有者，誤刪其他節點剛取得的鎖。
+
+**觸發特徵**：
+```java
+redis.opsForValue().setIfAbsent(key, "1", Duration.ofSeconds(5)); // ← TTL 固定且短
+try {
+    doSettle();                  // 執行時間可能 > 5s → 鎖已過期
+} finally {
+    redis.delete(key);           // ← 不校驗持有者，可能刪到他人鎖
+}
+```
+
+**修復策略**：
+```java
+// 方案 A：Redisson 自帶 watchdog 自動續租（鎖未釋放前持續延長 TTL）
+// 方案 B：TTL > 最長執行時間；釋放用 Lua 原子校驗持有者
+//   if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) end
+```
+
+**反哺規則**：RULE-CON-008
+
+---
+
+## PAT-SCH-001：PowerJob 多 Worker 資料競爭
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；concurrency 類）↓↓↓ -->
+```yaml
+id: PAT-SCH-001
+title: PowerJob 多 Worker 資料競爭
+status: active
+confidence: medium
+severity_base: P1
+category: concurrency
+applies_to: [scheduler, powerjob, batch-settlement]
+cwe: [CWE-362, CWE-694]
+invariants: [INV-T-02]
+antipattern:
+  - "多 Worker 廣播/叢集模式各自撈全量待處理資料"
+  - "無分片鍵隔離（shardIndex/shardTotal）"
+  - "單筆無冪等鍵 / 無 DB 狀態 CAS"
+detect:
+  static_queries:
+    - "排程 handler 撈 pending 清單後直接處理，未依 shardIndex 取模隔離"
+    - "排程資金操作無 setIfAbsent/狀態 CAS"
+  db_evidence: ["是否有狀態過濾/唯一鍵排除已處理？"]
+false_positive_checks: ["是否單機排程或已用分片參數隔離？"]
+confirm_when: ["多 Worker 並行處理同一批資料且無分片/冪等"]
+fix_strategy: "分片鍵隔離（id % shardTotal == shardIndex）+ 單筆冪等鍵 + DB 狀態 CAS"
+rule_ref: RULE-SCH-001
+created: 2026-06-07
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
+**描述**：
+分散式排程框架（PowerJob / xxl-job / Quartz cluster）以廣播或叢集模式執行時，多個 Worker 並行跑同一任務。若各 Worker 都撈取全量待處理資料、且無分片隔離與冪等保護，同一批訂單會被多個 Worker 重複結算/重複入帳。
+
+**觸發特徵**：
+```java
+@PowerJobHandler(name = "settleJob")     // 廣播模式：每個 Worker 都執行
+public ProcessResult process(TaskContext ctx) {
+    List<Order> orders = orderMapper.selectPending();   // ← 各 Worker 撈到同一批
+    orders.forEach(settlementService::settle);          // ← 無分片/冪等 → 重複結算
+    return new ProcessResult(true);
+}
+```
+
+**修復策略**：
+```java
+// 分片隔離：只處理屬於本 Worker 分片的資料
+int idx = ctx.getShardIndex(), total = ctx.getShardTotal();
+List<Order> mine = orderMapper.selectPendingByShard(idx, total); // WHERE id % total = idx
+// 再加單筆冪等鍵 + 狀態 CAS（UPDATE ... WHERE status='PENDING'）
+```
+
+**反哺規則**：RULE-SCH-001
+
+---
+
+## PAT-BIZ-001：委託時間窗口競態條件
+
+<!-- ↓↓↓ 機器可讀區塊（遵循 knowledge-schema.md v1.0；business 類）↓↓↓ -->
+```yaml
+id: PAT-BIZ-001
+title: 委託時間窗口競態條件
+status: active
+confidence: medium
+severity_base: P1
+category: business
+applies_to: [order, trading-window, cutoff]
+cwe: [CWE-367, CWE-362]
+invariants: [INV-ST-05, INV-T-03]
+antipattern:
+  - "isOpen() 檢查與接單之間窗口已關（check-then-act 跨窗口邊界）"
+  - "用伺服器本地時間/可信前端時間判斷窗口"
+  - "跨 cutoff 的委託被歸錯結算期"
+detect:
+  static_queries:
+    - "marketStatus.isOpen()/inWindow() 檢查與 order.accept 之間非原子"
+    - "用 LocalDateTime.now() 系統時區判斷交易窗口/cutoff"
+false_positive_checks: ["接單是否已用帶窗口條件的原子 SQL？"]
+confirm_when: ["窗口判斷與接單非原子，或 cutoff 邊界歸期不明確"]
+fix_strategy: "伺服器權威時間 + 接單原子條件（WHERE window_open AND now<cutoff）；cutoff 以交易所時區明確歸期"
+rule_ref: RULE-BIZ-003
+related: [time-window-cutoff-calendar-rules, PAT-SEC-103]
+created: 2026-06-07
+reproduced_count: 0
+```
+<!-- ↑↑↑ 機器可讀區塊結束 ↑↑↑ -->
+
+**描述**：
+下單/委託在「時間窗口邊界」（開盤、收盤、結算 cutoff）發生競態：先 `isOpen()` 檢查通過、到實際接單之間窗口已關閉（check-then-act）；或委託在 cutoff 瞬間進來，被歸到錯誤的結算期。也常因用伺服器本地時間或信任前端時間判斷窗口而出錯。
+
+**觸發特徵**：
+```java
+if (marketStatus.isOpen()) {        // T1：檢查窗口開
+    // ... 窗口在此關閉（到了 cutoff）...
+    orderService.accept(order);      // T2：仍接單，或歸到錯誤結算期
+}
+```
+
+**修復策略**：
+```java
+// 以伺服器權威時間 + 單一原子判斷接單（資料庫條件保證）
+int n = orderMapper.acceptIfWindowOpen(order, serverNow);
+// SQL: INSERT/UPDATE ... WHERE :serverNow < cutoff AND window_status = 'OPEN'
+if (n == 0) throw new WindowClosedException();
+// cutoff 邊界以交易所時區明確歸期（見 time-window-cutoff-calendar-rules）
+```
+
+**反哺規則**：RULE-BIZ-003
+
+---
+
 ## 新增模式（模板）
 
 複製以下模板，在檔案末尾新增新的模式：
