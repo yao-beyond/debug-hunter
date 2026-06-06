@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/yao-beyond/debug-hunter/actions/workflows/ci.yml"><img src="https://github.com/yao-beyond/debug-hunter/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
+  <a href="https://github.com/yao-beyond/debug-hunter/actions/workflows/codeql.yml"><img src="https://github.com/yao-beyond/debug-hunter/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
   <img src="https://img.shields.io/badge/Java-21-orange.svg" alt="Java 21"/>
   <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F.svg" alt="Spring Boot 3"/>
