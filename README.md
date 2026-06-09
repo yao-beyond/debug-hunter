@@ -83,6 +83,38 @@ plugin 本體位於 `plugins/debug-hunter/`，可直接把 Claude Code 指向其
 
 ---
 
+## 📁 專案結構
+
+本 repo 根目錄同時是**自架 marketplace**，plugin 本體集中於 `plugins/debug-hunter/`（自包含、可被兩平台複製安裝）。兩份 catalog 各自指向同一個 plugin，互不干擾。
+
+```text
+debug-hunter/                            # repo 根 ＝ 自架 plugin marketplace
+├── .claude-plugin/marketplace.json      # Claude Code 目錄  ─┐
+├── .agents/plugins/marketplace.json     # Codex 目錄        ─┤→ 都指向 ↓
+└── plugins/debug-hunter/                # ◀ plugin 本體（兩平台共用、自包含）
+    ├── .claude-plugin/plugin.json       #   Claude Code manifest
+    ├── .codex-plugin/plugin.json        #   Codex manifest
+    ├── AGENT.md · AGENTS.md             #   7 階段閉環總指揮（AGENTS.md＝Codex 慣例）
+    ├── agents/                          #   7 個子代理：threat-modeler · detector ·
+    │                                    #   security-fraud-detector · reproducer ·
+    │                                    #   root-cause · verifier · knowledge-writer
+    ├── skills/debug-hunter/SKILL.md     #   金融 Bug 偵測技能
+    ├── commands/debug-hunt.md           #   斜線指令 /debug-hunter:debug-hunt
+    ├── knowledge-base/                  #   知識庫（模式 / 不變量 / 證據標準）
+    ├── rules/                           #   Semgrep + CodeQL 規則
+    └── examples/                        #   23 個純 JDK 閉環 demo
+```
+
+```text
+使用者安裝流程
+  Claude Code:  /plugin marketplace add yao-beyond/debug-hunter
+                /plugin install debug-hunter@debug-hunter-marketplace
+  Codex CLI:    codex plugin marketplace add yao-beyond/debug-hunter  →  /plugins
+                       └─ 兩者都會把 plugins/debug-hunter/ 整包複製到本機 plugin 快取
+```
+
+---
+
 ## 🛠️ 使用方式
 
 ### 1. 用 Claude Code 跑完整閉環（主要用法）

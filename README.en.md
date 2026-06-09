@@ -83,6 +83,40 @@ The plugin body lives in `plugins/debug-hunter/`; point Claude Code at its `AGEN
 
 ---
 
+## 📁 Repository layout
+
+The repo root is itself a **self-hosted marketplace**; the plugin body lives in
+`plugins/debug-hunter/` (self-contained, copied on install by both platforms). Two catalogs
+point at the same plugin without interfering.
+
+```text
+debug-hunter/                            # repo root = self-hosted plugin marketplace
+├── .claude-plugin/marketplace.json      # Claude Code catalog  ─┐
+├── .agents/plugins/marketplace.json     # Codex catalog        ─┤→ both point to ↓
+└── plugins/debug-hunter/                # ◀ the plugin (shared by both, self-contained)
+    ├── .claude-plugin/plugin.json       #   Claude Code manifest
+    ├── .codex-plugin/plugin.json        #   Codex manifest
+    ├── AGENT.md · AGENTS.md             #   7-stage closed-loop orchestrator (AGENTS.md = Codex)
+    ├── agents/                          #   7 subagents: threat-modeler · detector ·
+    │                                    #   security-fraud-detector · reproducer ·
+    │                                    #   root-cause · verifier · knowledge-writer
+    ├── skills/debug-hunter/SKILL.md     #   financial bug-detection skill
+    ├── commands/debug-hunt.md           #   slash command /debug-hunter:debug-hunt
+    ├── knowledge-base/                  #   knowledge base (patterns / invariants / evidence)
+    ├── rules/                           #   Semgrep + CodeQL rules
+    └── examples/                        #   23 pure-JDK closed-loop demos
+```
+
+```text
+Install flow
+  Claude Code:  /plugin marketplace add yao-beyond/debug-hunter
+                /plugin install debug-hunter@debug-hunter-marketplace
+  Codex CLI:    codex plugin marketplace add yao-beyond/debug-hunter  →  /plugins
+                       └─ both copy the whole plugins/debug-hunter/ into the local plugin cache
+```
+
+---
+
 ## 🛠️ Usage
 
 ### 1. Run the full loop with Claude Code (primary)
