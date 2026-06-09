@@ -183,6 +183,17 @@ Knowledge is organized into four layers. Full map: [**MAP.md**](plugins/debug-hu
 
 ---
 
+## 📣 Outreach / listing tracker
+
+| Platform / list | Link | Status |
+|------|------|------|
+| GitHub Release | [v2.0.0](https://github.com/yao-beyond/debug-hunter/releases/tag/v2.0.0) | ✅ Published |
+| awesome-claude (curated list) | [suggestion issue #259](https://github.com/webfuse-com/awesome-claude/issues/259) | ⏳ Awaiting maintainer review |
+
+> Tracks debug-hunter's external releases and third-party listing progress. Update the status as new outreach happens.
+
+---
+
 ## 📈 Vision
 Eliminate "phantom bugs" in financial systems — automated interception and precise severity for core business vulnerabilities, so that every fixed bug never comes back.
 
