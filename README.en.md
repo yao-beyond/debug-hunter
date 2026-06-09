@@ -189,8 +189,10 @@ Knowledge is organized into four layers. Full map: [**MAP.md**](plugins/debug-hu
 |------|------|------|
 | GitHub Release | [v2.0.0](https://github.com/yao-beyond/debug-hunter/releases/tag/v2.0.0) | ✅ Published |
 | awesome-claude (curated list) | [suggestion issue #259](https://github.com/webfuse-com/awesome-claude/issues/259) | ⏳ Awaiting maintainer review |
+| 🔒 Watch routine (internal) | [routine: #259 watcher](https://claude.ai/code/routines/trig_013bEfkhp1enjjmTF4BPHM1X) | 🤖 Daily auto-check at 09:01 |
 
 > Tracks debug-hunter's external releases and third-party listing progress. Update the status as new outreach happens.
+> 🔒 Rows marked "internal" are private monitoring tools; the link is only accessible from the maintainer's account (not usable by other readers).
 
 ---
 
