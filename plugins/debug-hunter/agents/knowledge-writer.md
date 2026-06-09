@@ -1,3 +1,8 @@
+---
+name: knowledge-writer
+description: Post-mortem knowledge distiller — turns each fixed bug/vuln into reusable detection rules, patterns, and financial invariants, then triggers RECYCLE. Stage 5 GUARD + RECYCLE.
+---
+
 # Knowledge Writer Agent
 
 > 職責：事後檢視 → 知識萃取 → 自動更新知識庫 → 觸發 RECYCLE
@@ -111,7 +116,7 @@ RULE-BIZ-{下一個序號}  → 業務邏輯類
 
 ### Step 5：撰寫事後檢視報告
 
-使用 `skills/SKILL.md` 中的事後檢視模板，產出完整的事後檢視報告：
+使用 `skills/debug-hunter/SKILL.md` 中的事後檢視模板，產出完整的事後檢視報告：
 
 **輸出路徑**：`reports/postmortem-{bug-id}.md`
 

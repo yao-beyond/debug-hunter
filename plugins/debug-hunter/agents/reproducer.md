@@ -1,3 +1,8 @@
+---
+name: reproducer
+description: Reproduces a bug as a minimal failing test (MRS); for security findings builds an attack PoC that violates a financial invariant (succeeds pre-fix, fails post-fix). Stage 2.5 REPRODUCE.
+---
+
 # Reproducer Agent — 情境復現代理人
 
 > 職責：在 Bug 進入修復前，確認其能穩定復現，並建立最小復現情境（MRS）

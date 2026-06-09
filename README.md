@@ -43,26 +43,43 @@
 
 - **雙軌獵殺**: 正確性帽（浮點誤算、冪等失效）＋ 安全帽（越權、竄改、雙花、偽造、注入）。
 - **三層防線**: 特徵比對（已知寫法）→ Taint 汙染流（已知攻擊面）→ 金融不變量（未知後果）。
-- **治理驅動**: 所有知識條目遵循 [`knowledge-schema.md`](knowledge-base/knowledge-schema.md)，可被模型解析成偵測動作，並透過 RECYCLE 安全地自我進化（防語義漂移／誤報污染）。
-- **量化風險**: 基於 [`severity-loss-model.md`](knowledge-base/severity-loss-model.md) 的期望資損 (ALE) 評估，告別主觀 1–5 分。
+- **治理驅動**: 所有知識條目遵循 [`knowledge-schema.md`](plugins/debug-hunter/knowledge-base/knowledge-schema.md)，可被模型解析成偵測動作，並透過 RECYCLE 安全地自我進化（防語義漂移／誤報污染）。
+- **量化風險**: 基於 [`severity-loss-model.md`](plugins/debug-hunter/knowledge-base/severity-loss-model.md) 的期望資損 (ALE) 評估，告別主觀 1–5 分。
 - **端到端驗證**: 集成屬性測試 (PBT) 與攻擊回歸語料，確保每個漏洞都能被自動復現並永久消滅。
 
 ---
 
 ## 📦 安裝
 
-### 必要
-- **一個 Agent 執行器**：推薦 [Claude Code CLI](https://claude.com/claude-code)（能讀取 `AGENT.md` 指揮整個閉環）。亦可用任何支援自訂 system prompt / agent 檔的 LLM 工具。
+debug-hunter 本身就是一個**自架 plugin marketplace**，可直接在 Claude Code 與 Codex CLI 安裝。
 
-### 選用（依需求）
-- **Semgrep** — 跑內建靜態規則：`pipx install semgrep` 或 `brew install semgrep`
-- **JDK 21+** — 跑端到端 demo（純 JDK，零第三方依賴）
+> ℹ️ Anthropic 與 OpenAI 目前都沒有開放第三方提交到「官方公共 marketplace」的流程。這裡的「安裝」＝把**本 repo 加為 marketplace 來源**後安裝其中的 `debug-hunter` plugin。
 
-### 取得專案
+### 方式 A：Claude Code（plugin marketplace）
 ```bash
-git clone <this-repo-url> debug-hunter
+# 在 Claude Code 對話中：
+/plugin marketplace add yao-beyond/debug-hunter
+/plugin install debug-hunter@debug-hunter-marketplace
+```
+安裝後即可使用 `/debug-hunter:debug-hunt <掃描範圍>` 觸發完整閉環，子代理（`threat-modeler`、`detector`、`security-fraud-detector`、`reproducer`、`root-cause`、`verifier`、`knowledge-writer`）會出現在 `/agents`。
+
+### 方式 B：Codex CLI（plugin marketplace）
+```bash
+codex plugin marketplace add yao-beyond/debug-hunter
+codex            # 進入互動模式
+/plugins         # 啟用 debug-hunter
+```
+
+### 方式 C：直接從原始碼跑（不裝 plugin）
+```bash
+git clone https://github.com/yao-beyond/debug-hunter.git
 cd debug-hunter
 ```
+plugin 本體位於 `plugins/debug-hunter/`，可直接把 Claude Code 指向其中的 `AGENT.md`（見下方使用方式）。
+
+### 選用工具（依需求）
+- **Semgrep** — 跑內建靜態規則：`pipx install semgrep` 或 `brew install semgrep`
+- **JDK 21+** — 跑端到端 demo（純 JDK，零第三方依賴）
 
 ---
 
@@ -71,29 +88,29 @@ cd debug-hunter
 ### 1. 用 Claude Code 跑完整閉環（主要用法）
 把 Claude Code 指向總指揮 `AGENT.md`，它會自動載入知識庫並依 7 階段執行：
 ```bash
-claude --agent AGENT.md "掃描 src/settlement 模組，找出所有高風險財務與安全漏洞"
+claude --agent plugins/debug-hunter/AGENT.md "掃描 src/settlement 模組，找出所有高風險財務與安全漏洞"
 ```
 或在 Claude Code 對話中讓它讀 `AGENT.md` 後下達範圍指令。它會輸出帶證據的 Findings、攻擊 PoC、修復方案與反哺規則。
 
 ### 2. 只跑單一階段 / 專責 Agent
 ```bash
 # Stage 0：威脅建模（先想攻擊者要什麼）
-claude --agent agents/threat-modeler.md "對 src/wallet 的所有資金端點做威脅建模"
+claude --agent plugins/debug-hunter/agents/threat-modeler.md "對 src/wallet 的所有資金端點做威脅建模"
 
 # Stage 1：財務安全/舞弊偵測（taint source→sink）
-claude --agent agents/security-fraud-detector.md "掃描 src/settlement"
+claude --agent plugins/debug-hunter/agents/security-fraud-detector.md "掃描 src/settlement"
 
 # Stage 1：正確性偵測
-claude --agent agents/detector.md "靜態掃描 src/settlement"
+claude --agent plugins/debug-hunter/agents/detector.md "靜態掃描 src/settlement"
 ```
 
 ### 3. 跑內建 Semgrep 規則（CI 可掛）
 ```bash
 # 對你的原始碼掃描財務安全模式
-semgrep --config rules/semgrep/financial-security.yml src/
+semgrep --config plugins/debug-hunter/rules/semgrep/financial-security.yml src/
 
 # 驗證規則本身（pass/fail fixture，應為 7/7 通過）
-semgrep --test rules/semgrep/
+semgrep --test plugins/debug-hunter/rules/semgrep/
 ```
 
 ### 4. 跑端到端 demo（看閉環如何運作）
@@ -106,23 +123,23 @@ semgrep --test rules/semgrep/
 | 精度/業務 (PAT-FIN/BIZ) | FloatMoney、BigDecimalEquals、DivideRounding、AssetScale、AllocationResidue、TimestampUnit、LongOverflow、SettlementGuard、TradingWindowRace |
 
 ```bash
-cd examples/vulnerable-settlement
+cd plugins/debug-hunter/examples/vulnerable-settlement
 for f in *Demo.java; do javac "$f" && java "${f%.java}"; done   # 全部跑一遍，exit 0 = 閉環成立
 ```
 
 ![demo 套件實際執行：23 個 demo 全數通過](docs/demo-suite-run.png)
 
-> **完整 Pattern → demo/規則 對照矩陣見 [DEMO-COVERAGE.md](knowledge-base/DEMO-COVERAGE.md)**：30 條 PAT 全有佐證——23 條可執行 demo、3 條由 Semgrep/CodeQL 靜態規則涵蓋、4 條由 `reproduce-scenarios` 的 SCENE 涵蓋。各 demo 說明見 [examples README](examples/vulnerable-settlement/README.md)。
+> **完整 Pattern → demo/規則 對照矩陣見 [DEMO-COVERAGE.md](plugins/debug-hunter/knowledge-base/DEMO-COVERAGE.md)**：30 條 PAT 全有佐證——23 條可執行 demo、3 條由 Semgrep/CodeQL 靜態規則涵蓋、4 條由 `reproduce-scenarios` 的 SCENE 涵蓋。各 demo 說明見 [examples README](plugins/debug-hunter/examples/vulnerable-settlement/README.md)。
 
 ### 5. 讓知識庫驅動 AI 診斷
 當 AI（或你）發現異常時，引導它對照知識庫定性：
-> 「請依據 [`financial-invariants.md`](knowledge-base/financial-invariants.md) 檢查此 Finding 是否違反餘額守恆，對照 [`money-flow-map.md`](knowledge-base/money-flow-map.md) 標記影響金流，並依 [`finding-evidence-standard.md`](knowledge-base/finding-evidence-standard.md) 補齊證據後才定級。」
+> 「請依據 [`financial-invariants.md`](plugins/debug-hunter/knowledge-base/financial-invariants.md) 檢查此 Finding 是否違反餘額守恆，對照 [`money-flow-map.md`](plugins/debug-hunter/knowledge-base/money-flow-map.md) 標記影響金流，並依 [`finding-evidence-standard.md`](plugins/debug-hunter/knowledge-base/finding-evidence-standard.md) 補齊證據後才定級。」
 
 ---
 
 ## 🗺️ 知識庫導航 (Knowledge Base)
 
-知識分為四個層級，完整地圖見 [**MAP.md**](knowledge-base/MAP.md)、逐檔索引與一致性檢查見 [**KB-INDEX.md**](knowledge-base/KB-INDEX.md)：
+知識分為四個層級，完整地圖見 [**MAP.md**](plugins/debug-hunter/knowledge-base/MAP.md)、逐檔索引與一致性檢查見 [**KB-INDEX.md**](plugins/debug-hunter/knowledge-base/KB-INDEX.md)：
 
 1. **元治理 (Meta)** — 規範知識格式與證據標準：`knowledge-schema`、`finding-evidence-standard`
 2. **基石 (Ground-Truth)** — 金流圖、授權矩陣、狀態機、術語表

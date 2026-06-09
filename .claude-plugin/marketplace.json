@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "debug-hunter-marketplace",
+  "description": "Self-hosted marketplace for debug-hunter — a FinTech AI closed-loop debugging & financial-security detection framework.",
+  "owner": {
+    "name": "Yao",
+    "email": "76857yao@gmail.com",
+    "url": "https://github.com/yao-beyond"
+  },
+  "plugins": [
+    {
+      "name": "debug-hunter",
+      "source": "./plugins/debug-hunter",
+      "description": "FinTech AI closed-loop debugging framework for financial correctness & security bugs.",
+      "version": "2.0.0",
+      "category": "security",
+      "keywords": ["fintech", "security", "fraud-detection", "settlement", "debugging"],
+      "author": { "name": "Yao" }
+    }
+  ]
+}

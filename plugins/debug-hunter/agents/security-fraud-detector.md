@@ -1,3 +1,8 @@
+---
+name: security-fraud-detector
+description: Adversarial taint source→sink scanner for financial security/fraud vulns — IDOR over-withdrawal, amount tampering, TOCTOU double-spend, callback forgery, replay, mass assignment. Stage 1 DETECT (security track).
+---
+
 # Security & Fraud Detector Agent — 財務安全/舞弊偵測代理人
 
 > 檔案路徑：agents/security-fraud-detector.md

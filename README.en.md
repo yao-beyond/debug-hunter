@@ -43,26 +43,43 @@ Generic SAST / AI scanners have three blind spots for financial systems. debug-h
 
 - **Dual-track hunting**: a correctness hat (float errors, idempotency failures) + a security hat (privilege abuse, tampering, double-spend, forgery, injection).
 - **Three-layer defense**: signature match (known patterns) → taint flow (known attack surface) → financial invariants (unknown consequences).
-- **Governance-driven**: every knowledge entry follows [`knowledge-schema.md`](knowledge-base/knowledge-schema.md), is machine-parsable into detection actions, and self-evolves safely via RECYCLE (guarding against semantic drift / false-positive pollution).
-- **Quantified risk**: severity is annualized loss expectancy (ALE) from [`severity-loss-model.md`](knowledge-base/severity-loss-model.md), not a subjective 1–5.
+- **Governance-driven**: every knowledge entry follows [`knowledge-schema.md`](plugins/debug-hunter/knowledge-base/knowledge-schema.md), is machine-parsable into detection actions, and self-evolves safely via RECYCLE (guarding against semantic drift / false-positive pollution).
+- **Quantified risk**: severity is annualized loss expectancy (ALE) from [`severity-loss-model.md`](plugins/debug-hunter/knowledge-base/severity-loss-model.md), not a subjective 1–5.
 - **End-to-end verification**: property-based testing (PBT) and an attack regression corpus ensure every bug is reproducibly caught and permanently killed.
 
 ---
 
 ## 📦 Install
 
-### Required
-- **An agent runner**: [Claude Code CLI](https://claude.com/claude-code) recommended (it reads `AGENT.md` to drive the whole loop). Any LLM tool that supports a custom system prompt / agent file works too.
+debug-hunter is itself a **self-hosted plugin marketplace** that installs on both Claude Code and Codex CLI.
 
-### Optional (as needed)
-- **Semgrep** — to run the bundled static rules: `pipx install semgrep` or `brew install semgrep`
-- **JDK 21+** — to run the end-to-end demo (pure JDK, zero third-party deps)
+> ℹ️ Neither Anthropic nor OpenAI currently offers a public third-party submission flow to an "official" marketplace. "Install" here means **adding this repository as a marketplace source** and installing the `debug-hunter` plugin from it.
 
-### Get the project
+### Option A: Claude Code (plugin marketplace)
 ```bash
-git clone <this-repo-url> debug-hunter
+# Inside a Claude Code session:
+/plugin marketplace add yao-beyond/debug-hunter
+/plugin install debug-hunter@debug-hunter-marketplace
+```
+Then run `/debug-hunter:debug-hunt <scope>` to kick off the full loop. The subagents (`threat-modeler`, `detector`, `security-fraud-detector`, `reproducer`, `root-cause`, `verifier`, `knowledge-writer`) show up in `/agents`.
+
+### Option B: Codex CLI (plugin marketplace)
+```bash
+codex plugin marketplace add yao-beyond/debug-hunter
+codex            # interactive mode
+/plugins         # enable debug-hunter
+```
+
+### Option C: Run from source (no plugin install)
+```bash
+git clone https://github.com/yao-beyond/debug-hunter.git
 cd debug-hunter
 ```
+The plugin body lives in `plugins/debug-hunter/`; point Claude Code at its `AGENT.md` (see Usage below).
+
+### Optional tools (as needed)
+- **Semgrep** — to run the bundled static rules: `pipx install semgrep` or `brew install semgrep`
+- **JDK 21+** — to run the end-to-end demo (pure JDK, zero third-party deps)
 
 ---
 
@@ -71,29 +88,29 @@ cd debug-hunter
 ### 1. Run the full loop with Claude Code (primary)
 Point Claude Code at the orchestrator `AGENT.md`; it loads the knowledge base and runs the 7 stages:
 ```bash
-claude --agent AGENT.md "Scan src/settlement for all high-risk financial and security vulnerabilities"
+claude --agent plugins/debug-hunter/AGENT.md "Scan src/settlement for all high-risk financial and security vulnerabilities"
 ```
 It outputs evidence-backed findings, attack PoCs, fixes, and feedback rules.
 
 ### 2. Run a single stage / specialized agent
 ```bash
 # Stage 0: threat modeling (think like the attacker first)
-claude --agent agents/threat-modeler.md "Threat-model every money endpoint in src/wallet"
+claude --agent plugins/debug-hunter/agents/threat-modeler.md "Threat-model every money endpoint in src/wallet"
 
 # Stage 1: financial security / fraud detection (taint source→sink)
-claude --agent agents/security-fraud-detector.md "Scan src/settlement"
+claude --agent plugins/debug-hunter/agents/security-fraud-detector.md "Scan src/settlement"
 
 # Stage 1: correctness detection
-claude --agent agents/detector.md "Static scan of src/settlement"
+claude --agent plugins/debug-hunter/agents/detector.md "Static scan of src/settlement"
 ```
 
 ### 3. Run the bundled Semgrep rules (CI-ready)
 ```bash
 # Scan your source for financial-security patterns
-semgrep --config rules/semgrep/financial-security.yml src/
+semgrep --config plugins/debug-hunter/rules/semgrep/financial-security.yml src/
 
 # Validate the rules themselves (pass/fail fixtures — should be 7/7)
-semgrep --test rules/semgrep/
+semgrep --test plugins/debug-hunter/rules/semgrep/
 ```
 
 ### 4. Run the end-to-end demos (see the loop in action)
@@ -106,23 +123,23 @@ semgrep --test rules/semgrep/
 | Precision/business (PAT-FIN/BIZ) | FloatMoney, BigDecimalEquals, DivideRounding, AssetScale, AllocationResidue, TimestampUnit, LongOverflow, SettlementGuard, TradingWindowRace |
 
 ```bash
-cd examples/vulnerable-settlement
+cd plugins/debug-hunter/examples/vulnerable-settlement
 for f in *Demo.java; do javac "$f" && java "${f%.java}"; done   # run all; exit 0 = loop holds
 ```
 
 ![demo suite run: all 23 demos pass](docs/demo-suite-run.png)
 
-> **Full pattern → demo/rule matrix: [DEMO-COVERAGE.md](knowledge-base/DEMO-COVERAGE.md)** — all 30 PATs are evidenced: 23 runnable demos, 3 covered by Semgrep/CodeQL static rules, 4 covered by `reproduce-scenarios` SCENEs. Per-demo notes: [examples README](examples/vulnerable-settlement/README.md).
+> **Full pattern → demo/rule matrix: [DEMO-COVERAGE.md](plugins/debug-hunter/knowledge-base/DEMO-COVERAGE.md)** — all 30 PATs are evidenced: 23 runnable demos, 3 covered by Semgrep/CodeQL static rules, 4 covered by `reproduce-scenarios` SCENEs. Per-demo notes: [examples README](plugins/debug-hunter/examples/vulnerable-settlement/README.md).
 
 ### 5. Let the knowledge base drive AI diagnosis
 When you (or the AI) hit an anomaly, anchor the judgment to the knowledge base:
-> "Per [`financial-invariants.md`](knowledge-base/financial-invariants.md), check whether this finding violates balance conservation; map it against [`money-flow-map.md`](knowledge-base/money-flow-map.md); and only assign severity after completing the evidence required by [`finding-evidence-standard.md`](knowledge-base/finding-evidence-standard.md)."
+> "Per [`financial-invariants.md`](plugins/debug-hunter/knowledge-base/financial-invariants.md), check whether this finding violates balance conservation; map it against [`money-flow-map.md`](plugins/debug-hunter/knowledge-base/money-flow-map.md); and only assign severity after completing the evidence required by [`finding-evidence-standard.md`](plugins/debug-hunter/knowledge-base/finding-evidence-standard.md)."
 
 ---
 
 ## 🗺️ Knowledge Base
 
-Knowledge is organized into four layers. Full map: [**MAP.md**](knowledge-base/MAP.md); per-file index and consistency checks: [**KB-INDEX.md**](knowledge-base/KB-INDEX.md).
+Knowledge is organized into four layers. Full map: [**MAP.md**](plugins/debug-hunter/knowledge-base/MAP.md); per-file index and consistency checks: [**KB-INDEX.md**](plugins/debug-hunter/knowledge-base/KB-INDEX.md).
 
 1. **Meta-governance** — knowledge format & evidence standards: `knowledge-schema`, `finding-evidence-standard`
 2. **Ground-truth** — money-flow map, ownership matrix, state machines, glossary

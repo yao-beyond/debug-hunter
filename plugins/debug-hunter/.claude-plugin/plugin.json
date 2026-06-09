@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "debug-hunter",
+  "displayName": "Debug Hunter",
+  "version": "2.0.0",
+  "description": "FinTech AI closed-loop debugging framework: threat-model → detect → reproduce (attack PoC) → fix → verify (invariants) → recycle, for financial correctness & security bugs.",
+  "author": {
+    "name": "Yao",
+    "email": "76857yao@gmail.com",
+    "url": "https://github.com/yao-beyond"
+  },
+  "homepage": "https://github.com/yao-beyond/debug-hunter#readme",
+  "repository": "https://github.com/yao-beyond/debug-hunter",
+  "license": "MIT",
+  "keywords": [
+    "fintech",
+    "security",
+    "fraud-detection",
+    "settlement",
+    "debugging",
+    "static-analysis",
+    "semgrep",
+    "codeql",
+    "java",
+    "spring-boot"
+  ]
+}

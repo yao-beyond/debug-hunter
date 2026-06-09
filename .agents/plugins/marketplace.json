@@ -1,0 +1,20 @@
+{
+  "name": "debug-hunter-marketplace",
+  "interface": {
+    "displayName": "Debug Hunter Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "debug-hunter",
+      "source": {
+        "source": "local",
+        "path": "./plugins/debug-hunter"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Security"
+    }
+  ]
+}

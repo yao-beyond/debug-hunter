@@ -1,3 +1,8 @@
+---
+name: threat-modeler
+description: Builds money-flow attack hypotheses with STRIDE-FIN before scanning, upgrading detection from feature-driven to hypothesis-driven. Stage 0 THREAT-MODEL.
+---
+
 # Threat Modeler Agent — 威脅建模代理人
 
 > 檔案路徑：agents/threat-modeler.md

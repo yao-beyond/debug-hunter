@@ -18,7 +18,7 @@ jobs:
       - name: Install Semgrep
         run: pip install semgrep
       - name: Validate & test rules (pass/fail fixtures)
-        run: semgrep --test --config rules/semgrep rules/semgrep
+        run: semgrep --test --config plugins/debug-hunter/rules/semgrep plugins/debug-hunter/rules/semgrep
 
   e2e-demo:
     name: End-to-end demo
@@ -31,7 +31,7 @@ jobs:
           java-version: "21"
       - name: Compile & run closed-loop demos
         run: |
-          cd examples/vulnerable-settlement
+          cd plugins/debug-hunter/examples/vulnerable-settlement
           javac IdorDemo.java && java IdorDemo
           javac PaymentCallbackDemo.java && java PaymentCallbackDemo
           javac OracleManipulationDemo.java && java OracleManipulationDemo

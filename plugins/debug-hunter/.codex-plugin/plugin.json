@@ -1,0 +1,35 @@
+{
+  "name": "debug-hunter",
+  "version": "2.0.0",
+  "description": "FinTech AI closed-loop debugging & financial-security detection workflow for Java/Spring settlement systems.",
+  "author": {
+    "name": "Yao",
+    "email": "76857yao@gmail.com",
+    "url": "https://github.com/yao-beyond"
+  },
+  "homepage": "https://github.com/yao-beyond/debug-hunter#readme",
+  "license": "MIT",
+  "keywords": [
+    "fintech",
+    "security",
+    "fraud-detection",
+    "settlement",
+    "debugging",
+    "java",
+    "spring-boot"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Debug Hunter",
+    "shortDescription": "FinTech closed-loop bug & fraud hunter",
+    "longDescription": "Debug Hunter guides the agent through a 7-stage closed loop (threat-model, detect, triage, reproduce with attack PoC, fix, verify against financial invariants, guard + recycle) to hunt financial correctness and security/fraud vulnerabilities in Java/Spring settlement systems. It pairs a curated knowledge base with Semgrep/CodeQL rules and runnable JDK demos.",
+    "developerName": "Yao",
+    "category": "Security",
+    "websiteURL": "https://github.com/yao-beyond/debug-hunter",
+    "defaultPrompt": [
+      "Threat-model the money flows in src/settlement and list attack hypotheses",
+      "Scan src/settlement for financial correctness and security bugs with evidence",
+      "Reproduce this settlement bug as a failing test, then propose a fix"
+    ]
+  }
+}

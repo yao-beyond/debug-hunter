@@ -23,7 +23,7 @@ jobs:
           languages: java-kotlin
           build-mode: none
           # 預設安全查詢 + 本專案自訂財務安全規則
-          queries: ./rules/codeql
+          queries: ./plugins/debug-hunter/rules/codeql
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

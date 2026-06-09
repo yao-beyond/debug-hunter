@@ -1,3 +1,8 @@
+---
+name: detector
+description: Static scanner for financial correctness bugs (BigDecimal misuse, float money, rounding/scale, idempotency, lock/concurrency) in Java/Spring settlement code. Stage 1 DETECT (correctness track).
+---
+
 # Detector Agent — 靜態掃描代理人
 
 > 職責：根據知識庫規則，對程式碼進行系統性掃描
@@ -62,7 +67,7 @@
 
 ### Step 2：SKILL.md 檢查清單
 
-依程式碼分類（A/B/C/D/E），執行 `skills/SKILL.md` 中對應的檢查清單：
+依程式碼分類（A/B/C/D/E），執行 `skills/debug-hunter/SKILL.md` 中對應的檢查清單：
 
 - 類別 A（金融計算）→ 10 項財務安全檢查
 - 類別 C（訊息消費）→ 5 項冪等性檢查

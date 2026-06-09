@@ -1,3 +1,8 @@
+---
+name: debug-hunter
+description: Detect and fix financial bugs in Java/Spring settlement systems — money precision (BigDecimal/float/rounding), idempotency, concurrency/race conditions, and post-mortem analysis. Use when reviewing settlement, billing, ledger, or payment code.
+---
+
 # SKILL.md — 金融系統 Bug 偵測與修復技能
 
 > 適用：金融交易結算系統（範例） · Java · SpringBoot
