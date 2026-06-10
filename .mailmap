@@ -1,0 +1,4 @@
+# Maps commit identities to the canonical GitHub account (ritim).
+# Commits authored with yao@xihui.io are the same person as ritim;
+# this links them for `git shortlog`/`git log` and GitHub's contributor view.
+Yao <5123299+ritim@users.noreply.github.com> <yao@xihui.io>
