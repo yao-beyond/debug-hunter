@@ -1,0 +1,29 @@
+{
+  "case_id": "PAT-SEC-101-idor",
+  "pattern": "PAT-SEC-101",
+  "title": "IDOR 越權提款",
+  "track": "security",
+  "source_file": "plugins/debug-hunter/examples/vulnerable-settlement/IdorDemo.java",
+  "targets": [
+    {
+      "id": "vuln",
+      "label": "withdrawVulnerable",
+      "line": 31,
+      "is_vulnerable": true,
+      "taint_source": "accountId（caller 可控的請求參數）",
+      "taint_sink": "ledger.debit()",
+      "missing_control": "歸屬校驗（authorization-ownership-matrix：accountId 必須屬於 caller）",
+      "violated_invariant": "INV-ST-01",
+      "expected_severity": "high",
+      "required_evidence": ["trace_path", "logic_invariant", "guard_absence"]
+    },
+    {
+      "id": "safe",
+      "label": "withdrawFixed",
+      "line": 36,
+      "is_vulnerable": false,
+      "note": "已做歸屬校驗 + 數值域校驗；在此報高危即為誤報"
+    }
+  ],
+  "kb_refs": ["PAT-SEC-101", "INV-ST-01", "authorization-ownership-matrix", "CORP-001"]
+}

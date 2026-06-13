@@ -1,0 +1,29 @@
+{
+  "case_id": "PAT-FIN-006-allocation-residue",
+  "pattern": "PAT-FIN-006",
+  "title": "分配捨入殘差未處理（salami）",
+  "track": "correctness",
+  "source_file": "plugins/debug-hunter/examples/vulnerable-settlement/AllocationResidueDemo.java",
+  "targets": [
+    {
+      "id": "vuln",
+      "label": "allocateVulnerable",
+      "line": 12,
+      "is_vulnerable": true,
+      "taint_source": "TOTAL / N 除不盡（向下捨入）",
+      "taint_sink": "逐項入帳，迴圈後無 Σ=total 守恆校驗",
+      "missing_control": "殘差回填（最後一方吃殘差）或 Σ各方 == 總額 的守恆斷言",
+      "violated_invariant": "INV-TXN-05",
+      "expected_severity": "medium",
+      "required_evidence": ["logic_invariant", "state_mutation"]
+    },
+    {
+      "id": "safe",
+      "label": "allocateFixed",
+      "line": 19,
+      "is_vulnerable": false,
+      "note": "最後一方 = 總額 − 已分配，保證守恆；在此報殘差即為誤報"
+    }
+  ],
+  "kb_refs": ["PAT-FIN-006", "INV-TXN-05", "INV-ST-03", "RULE-FIN-007"]
+}

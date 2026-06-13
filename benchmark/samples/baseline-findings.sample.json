@@ -1,0 +1,43 @@
+{
+  "tool": "debug-hunter",
+  "run_id": "sample-illustrative",
+  "source": "sample",
+  "_comment": "示範用人工樣本，非真實偵測輸出。刻意含 1 漏報 + 1 誤報 + 1 證據不完整，以證明 scorer 能區分。真實測量請以 /debug-hunter:debug-hunt 跑 cases 後把輸出存成 source=agent-run 的 findings。",
+  "findings": [
+    {
+      "case_id": "PAT-SEC-101-idor",
+      "target": "withdrawVulnerable",
+      "severity": "high",
+      "evidence": ["trace_path", "logic_invariant", "guard_absence"],
+      "rationale": "accountId 直入 ledger.debit() 無歸屬校驗；PoC 違反 INV-ST-01；修復版負面對照通過"
+    },
+    {
+      "case_id": "PAT-SEC-101-idor",
+      "target": "withdrawFixed",
+      "severity": "medium",
+      "evidence": ["trace_path"],
+      "rationale": "（示範誤報）誤把已做歸屬校驗的修復版也標為可疑"
+    },
+    {
+      "case_id": "PAT-SEC-103-doublespend",
+      "target": "runVulnerable",
+      "severity": "high",
+      "evidence": ["trace_path", "logic_invariant"],
+      "rationale": "check-then-act 非原子；PoC 超提致金庫變負。（示範證據不完整：缺 guard_absence）"
+    },
+    {
+      "case_id": "PAT-FIN-006-allocation-residue",
+      "target": "allocateVulnerable",
+      "severity": "medium",
+      "evidence": ["logic_invariant", "state_mutation"],
+      "rationale": "逐項捨入無守恆校驗；Σ=99.99≠100.00 違反 INV-TXN-05；修復版守恆對照通過"
+    },
+    {
+      "case_id": "PAT-FIN-002-floatmoney",
+      "target": "main:double-accumulation",
+      "severity": "medium",
+      "evidence": ["logic_invariant", "state_mutation"],
+      "rationale": "double 累加 0.01 百萬次偏離真值。（示範漏報：未抓到 double-equality 落點）"
+    }
+  ]
+}

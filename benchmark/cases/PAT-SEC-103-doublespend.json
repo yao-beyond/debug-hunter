@@ -1,0 +1,29 @@
+{
+  "case_id": "PAT-SEC-103-doublespend",
+  "pattern": "PAT-SEC-103",
+  "title": "TOCTOU 雙花（餘額 check-then-act 非原子）",
+  "track": "concurrency",
+  "source_file": "plugins/debug-hunter/examples/vulnerable-settlement/DoubleSpendDemo.java",
+  "targets": [
+    {
+      "id": "vuln",
+      "label": "runVulnerable",
+      "line": 24,
+      "is_vulnerable": true,
+      "taint_source": "並發提款請求（多執行緒同時 check）",
+      "taint_sink": "vault.addAndGet(-AMT_CENTS)",
+      "missing_control": "檢查與扣款的原子性（鎖 / 原子 SQL UPDATE ... WHERE balance >= amt）",
+      "violated_invariant": "INV-ST-01",
+      "expected_severity": "high",
+      "required_evidence": ["trace_path", "logic_invariant", "guard_absence"]
+    },
+    {
+      "id": "safe",
+      "label": "SafeVault.withdraw",
+      "line": 50,
+      "is_vulnerable": false,
+      "note": "synchronized 讓檢查＋扣款原子；在此報競態即為誤報"
+    }
+  ],
+  "kb_refs": ["PAT-SEC-103", "INV-ST-01", "threat-catalog#AB-03", "CORP-003"]
+}

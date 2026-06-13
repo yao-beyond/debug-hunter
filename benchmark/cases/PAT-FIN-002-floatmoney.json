@@ -1,0 +1,40 @@
+{
+  "case_id": "PAT-FIN-002-floatmoney",
+  "pattern": "PAT-FIN-002",
+  "title": "double/float 處理金額（浮點累積誤差 + == 比較）",
+  "track": "correctness",
+  "source_file": "plugins/debug-hunter/examples/vulnerable-settlement/FloatMoneyDemo.java",
+  "targets": [
+    {
+      "id": "vuln-accumulation",
+      "label": "main:double-accumulation",
+      "line": 18,
+      "is_vulnerable": true,
+      "taint_source": "double d 累加 0.01",
+      "taint_sink": "高流量累加後入帳金額",
+      "missing_control": "全程 BigDecimal（字串建構），禁止以 double 儲存/累加金額",
+      "violated_invariant": "INV-ST-03",
+      "expected_severity": "medium",
+      "required_evidence": ["logic_invariant", "state_mutation"]
+    },
+    {
+      "id": "vuln-equality",
+      "label": "main:double-equality",
+      "line": 29,
+      "is_vulnerable": true,
+      "taint_source": "(0.1 + 0.2) == 0.3",
+      "taint_sink": "以 == 比較金額做分支判斷",
+      "missing_control": "BigDecimal.compareTo()",
+      "expected_severity": "medium",
+      "required_evidence": ["logic_invariant"]
+    },
+    {
+      "id": "safe",
+      "label": "main:bigdecimal-fix",
+      "line": 38,
+      "is_vulnerable": false,
+      "note": "全程 BigDecimal 累加 + compareTo；在此報浮點誤差即為誤報"
+    }
+  ],
+  "kb_refs": ["PAT-FIN-002", "RULE-FIN-003", "INV-ST-03"]
+}

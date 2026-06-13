@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/yao-beyond/debug-hunter/benchmark/findings.schema.json",
+  "title": "debug-hunter detector findings (scorer input)",
+  "description": "偵測器（/debug-hunt 或單一 detector agent）跑完 benchmark 後的正規化輸出。score.py 以此對照 cases/ 的 ground-truth 計分。",
+  "type": "object",
+  "required": ["tool", "source", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "tool": { "type": "string", "description": "產生此輸出的工具/代理名" },
+    "run_id": { "type": "string", "description": "本次執行的識別碼（時間戳或 commit）" },
+    "source": {
+      "type": "string",
+      "enum": ["sample", "agent-run", "static-rule"],
+      "description": "provenance：sample=示範用人工樣本（非真實測量）；agent-run=實際代理跑出；static-rule=Semgrep/CodeQL 輸出轉換"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "target", "severity"],
+        "additionalProperties": false,
+        "properties": {
+          "case_id": { "type": "string", "description": "對應 case manifest 的 case_id" },
+          "target": { "type": "string", "description": "偵測命中的符號/落點；scorer 以此比對 case target.label" },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "low", "medium", "high", "critical"]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "trace_path",
+                "logic_invariant",
+                "state_mutation",
+                "guard_absence"
+              ]
+            },
+            "description": "本 finding 實際補齊的證據（對照 target.required_evidence 判斷證據完整）"
+          },
+          "rationale": { "type": "string" }
+        }
+      }
+    }
+  }
+}

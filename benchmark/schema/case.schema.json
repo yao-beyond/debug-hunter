@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/yao-beyond/debug-hunter/benchmark/case.schema.json",
+  "title": "debug-hunter benchmark case manifest",
+  "description": "一個 benchmark case = 一段帶 ground-truth 標註的真實程式碼。錨定到 examples/ 的可執行 demo，描述漏洞版/修復版的精確落點，供 scorer 計分（TP/FP/FN/TN）。",
+  "type": "object",
+  "required": ["case_id", "pattern", "track", "source_file", "targets"],
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z]+-[0-9]+-[a-z0-9-]+$",
+      "description": "全域唯一 id，慣例 <PAT>-<slug>，例 PAT-SEC-101-idor"
+    },
+    "pattern": {
+      "type": "string",
+      "pattern": "^PAT-[A-Z]+-[0-9]+$",
+      "description": "對應知識庫 PAT 條目"
+    },
+    "title": { "type": "string" },
+    "track": {
+      "type": "string",
+      "enum": ["security", "correctness", "concurrency"],
+      "description": "漏洞軌道：\n- security: 財務安全、越權、舞弊 (觸發主體是外部輸入)\n- correctness: 業務邏輯、精度、捨入 (觸發主體是內部狀態/運算)\n- concurrency: 競態、TOCTOU、原子性 (觸發主體是並發時序)"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "相對 repo 根的程式碼路徑（指向真實 demo，非抽象描述）"
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "description": "計分目標：每個 target 是一段被標註的程式碼落點（漏洞版或安全版）",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "is_vulnerable"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "case 內唯一短 id，例 vuln / safe" },
+          "label": { "type": "string", "description": "符號名或可定位字串（函式名）；scorer 以此比對 finding.target" },
+          "line": { "type": "integer", "description": "source_file 中的近似行號（人工覆查用）" },
+          "is_vulnerable": {
+            "type": "boolean",
+            "description": "true=此落點確有漏洞（命中=TP，漏掉=FN）；false=安全程式碼（命中=FP，正確略過=TN）"
+          },
+          "taint_source": { "type": "string" },
+          "taint_sink": { "type": "string" },
+          "missing_control": { "type": "string", "description": "缺少的關鍵防護（漏洞版）" },
+          "violated_invariant": { "type": "string", "description": "被違反的不變量 INV-*" },
+          "expected_severity": {
+            "type": "string",
+            "enum": ["info", "low", "medium", "high", "critical"],
+            "description": "漏洞版應達到的最低定級；finding 低於此 = 定級不足"
+          },
+          "required_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "trace_path",
+                "logic_invariant",
+                "state_mutation",
+                "guard_absence"
+              ]
+            },
+            "description": "證據門檻（依軌道選取適當組合）：\n- trace_path: 觸發路徑 (Data-flow / Seq / Interleaving)\n- logic_invariant: 違反的規則 (Invariant / Business Rule)\n- state_mutation: 造成的破壞 (DB State / Precision Error)\n- guard_absence: 缺失的防護 (No Lock / No Check / Bypass)"
+          },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "kb_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "知識庫交叉引用（PAT/INV/MF/SCENE/CORP）"
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "track": { "const": "security" } } },
+      "then": {
+        "properties": {
+          "targets": {
+            "items": {
+              "if": { "properties": { "is_vulnerable": { "const": true } } },
+              "then": {
+                "required": ["required_evidence"],
+                "properties": {
+                  "required_evidence": { "contains": { "enum": ["trace_path", "logic_invariant"] } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "track": { "const": "correctness" } } },
+      "then": {
+        "properties": {
+          "targets": {
+            "items": {
+              "if": { "properties": { "is_vulnerable": { "const": true } } },
+              "then": {
+                "required": ["required_evidence"],
+                "properties": {
+                  "required_evidence": { "contains": { "enum": ["logic_invariant", "state_mutation"] } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "track": { "const": "concurrency" } } },
+      "then": {
+        "properties": {
+          "targets": {
+            "items": {
+              "if": { "properties": { "is_vulnerable": { "const": true } } },
+              "then": {
+                "required": ["required_evidence"],
+                "properties": {
+                  "required_evidence": { "contains": { "enum": ["trace_path", "guard_absence"] } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
