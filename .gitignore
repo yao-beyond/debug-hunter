@@ -2,3 +2,9 @@
 .DS_Store
 .omc/
 *.class
+/benchmark/metrics.json
+/benchmark/out.*.json
+/benchmark/mutation/mutants/
+/benchmark/mutation/manifests/
+/benchmark/mutation/generated-cases/
+/benchmark/mutation/out/

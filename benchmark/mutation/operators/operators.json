@@ -1,0 +1,76 @@
+{
+  "_doc": "宣告式 mutation operators。每個 operator 對 seed 做單點錨定式精確替換，注入一類金融缺陷。generate.py 會驗證三段 gate（可編譯 / 基線 oracle 通過 / mutant oracle 失敗且訊號相符）後才採用。ground-truth 存在此檔，不進 mutant 程式碼。新增缺陷類型＝在此加一條，並確保 seed 有對應方法與 Oracle 有對應不變量。",
+  "seed": "LedgerService.java",
+  "operators": [
+    {
+      "id": "OP-IDOR-REMOVE-OWNERSHIP",
+      "pattern": "PAT-SEC-101",
+      "track": "security",
+      "target_method": "withdraw",
+      "find": "        if (acc.ownerId() != callerId)\n            throw new AccessException(\"caller not owner of account \" + accountId);\n",
+      "replace": "",
+      "oracle_fail_signal": "INV-ST-01 violated",
+      "violated_invariant": "INV-ST-01",
+      "expected_severity": "high",
+      "required_evidence": ["trace_path", "logic_invariant", "guard_absence"],
+      "missing_control": "帳戶歸屬校驗（accountId 必須屬於 caller）"
+    },
+    {
+      "id": "OP-IDOR-TRANSFER-REMOVE-OWNERSHIP",
+      "pattern": "PAT-SEC-101",
+      "track": "security",
+      "target_method": "transfer",
+      "find": "        if (from.ownerId() != callerId)\n            throw new AccessException(\"caller not owner of source account \" + fromId);\n",
+      "replace": "",
+      "oracle_fail_signal": "INV-ST-02 violated",
+      "violated_invariant": "INV-ST-02",
+      "expected_severity": "high",
+      "required_evidence": ["trace_path", "logic_invariant", "guard_absence"],
+      "missing_control": "來源帳戶歸屬校驗（fromId 必須屬於 caller）"
+    },
+    {
+      "id": "OP-FLOAT-ACCUMULATE",
+      "pattern": "PAT-FIN-002",
+      "track": "correctness",
+      "target_method": "accumulate",
+      "find": "        BigDecimal sum = BigDecimal.ZERO;\n        for (int i = 0; i < times; i++) sum = sum.add(unit);\n        return sum;",
+      "replace": "        double sum = 0.0;\n        for (int i = 0; i < times; i++) sum += unit.doubleValue();\n        return BigDecimal.valueOf(sum);",
+      "oracle_fail_signal": "INV-ST-03 violated",
+      "violated_invariant": "INV-ST-03",
+      "expected_severity": "medium",
+      "required_evidence": ["logic_invariant", "state_mutation"],
+      "missing_control": "全程 BigDecimal，禁止以 double 累加金額"
+    },
+    {
+      "id": "OP-RESIDUE-DROP-BACKFILL",
+      "pattern": "PAT-FIN-006",
+      "track": "correctness",
+      "target_method": "split",
+      "find": "            out[i] = (i == n - 1) ? total.subtract(allocated) : each;",
+      "replace": "            out[i] = each;",
+      "oracle_fail_signal": "INV-TXN-05 violated",
+      "violated_invariant": "INV-TXN-05",
+      "expected_severity": "medium",
+      "required_evidence": ["logic_invariant", "state_mutation"],
+      "missing_control": "殘差回填（最後一方吸收捨入殘差）或 Σ=total 守恆校驗"
+    },
+    {
+      "id": "OP-ROUNDING-DROP-SCALE",
+      "pattern": "PAT-FIN-004",
+      "track": "correctness",
+      "target_method": "applyRate",
+      "find": "        return principal.multiply(rate).setScale(2, RoundingMode.HALF_UP);",
+      "replace": "        return principal.multiply(rate);",
+      "oracle_fail_signal": "INV-ST-04 violated",
+      "violated_invariant": "INV-ST-04",
+      "expected_severity": "medium",
+      "required_evidence": ["logic_invariant", "state_mutation"],
+      "missing_control": "明確 setScale + RoundingMode，避免未捨入的多餘精度入帳"
+    }
+  ],
+  "forbidden_tokens": [
+    "Vulnerable", "Fixed", "SafeVault", "withdrawFixed", "allocateFixed",
+    "PAT-", "SEC-", "FIN-", "INV-", "bug", "exploit", "attack",
+    "idor", "toctou", "doubleSpend", "residue", "salami", "vuln"
+  ]
+}
