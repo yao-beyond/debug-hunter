@@ -29,9 +29,43 @@ reports/threat-model-{timestamp}.json           ← Stage 0 的待驗證威脅
 
 ---
 
-## 偵測方法論：Taint source → sink（核心，非純特徵比對）
+## 偵測方法論：Taint source → sink（結構化驗證循環）
 
-不要只 grep 特徵字串。對每個資金匯點（sink），**反向追蹤**資料來源，檢查路徑上是否經過必要的清洗閘。
+不要只 grep 特徵字串。對每個資金匯點（sink），你必須執行 **[Mandatory Security Audit Protocol]**，透過「主動追蹤」與「行號證明」來確認漏洞。
+
+#### [Mandatory Security Audit Protocol]
+對於每個可能的 taint 路徑，你必須依照下列順序執行分析，並在報告中附上證據：
+
+**1. 歸屬權強制證明 (Ownership Enforcement Proof)**
+- **Locate the Binding**: 程式碼哪一行將「請求中的資源 ID」與「受信任的 Session/JWT userId」進行了比對？
+- **Evidence Requirement**: 必須指出具體代碼行（例：`if(!acc.getUserId().equals(ctx.getUserId()))`）或 SQL 條件。
+- **[Critical]**：若能從 Source 追蹤到 Sink 卻找不到上述比對行，必須標記為 `[FINDING: PAT-SEC-101] Missing Ownership Check`。
+
+**2. 數值域完整性驗證 (Value Integrity Audit)**
+- **Identify Range Checks**: 哪一行校驗了金額的 `signum() > 0`？哪一行校驗了 `scale()` 符合資產定義？
+- **Source Trust**: 該金額是否來自前端傳回的「計算後金額」？若是且無後端重算 -> `[FINDING: PAT-SEC-102] Unsafe Amount Trust`。
+
+**3. 原子性與競態判定 (Race Condition Refutation)**
+- **Concurrency Check**: 檢查「餘額讀取」與「資金扣減」是否在同一個原子鎖或帶條件的 SQL 中。
+- **Evidence**: 若為 `if(bal >= amt) { update }` 結構且無鎖，必須標記為 `[FINDING: PAT-SEC-103] TOCTOU Race`。
+
+**4. 安全反證排除 (Adversarial Refutation)**
+在定性漏洞前，嘗試推翻自己：
+- **Q1**: 該 Sink 是否僅能由具有特定「內部角色 (Internal Role)」的人員觸發？
+- **Q2**: 是否存在全域 AOP / Filter 已經對該類路徑強制執行了歸屬校驗？(需具體說明 AOP 名稱)
+- **Q3**: 操作的對象是否為「非敏感、不可用來提款」的次級資源？
+- **Verdict**: 若以上回答皆為 No 且無證據行，則維持 Finding。
+
+**5. 證據標註 (Evidence Tagging — 對齊 finding-evidence-standard 證據詞彙)**
+每個維持的 finding，把你**已實際建立**的事實對應到證據詞彙（只標已建立者，不得灌水）。
+security 類升 confirmed 的客觀錨點是**前兩項、缺一不可**：
+- **`trace_path`（必填）**：標出 source→sink 路徑——污染輸入（tainted 資源 id／金額）如何抵達資金 sink。
+- **`logic_invariant`（必填）**：點名被違反的具體不變量（如越權動帳違反 `INV-ST-01` 餘額/歸屬、轉帳越權違反 `INV-ST-02`）。
+  指不出某條 INV → 僅「疑慮」，不得升 confirmed。
+- **`guard_absence`（強烈建議）**：指出缺失的防線（缺歸屬比對／缺鎖／缺數值域校驗），並附「已找過但不存在」的證明。
+- `state_mutation`（選填）：若能展示越權造成的具體資損結果（他人餘額被改、超提變負），一併標註。
+
+> 安全漏洞的「傷害」是**攻擊者能讓系統替他動帳**——IDOR/越權 finding 至少要同時給出 (a) 污染路徑、(b) 違反哪條歸屬/餘額不變量。只說「沒看到 owner check」而不標 trace_path＋invariant＝證據不完整。
 
 ### 步驟
 1. **定位所有 Sink**：credit/debit/setBalance/settle/withdraw/transfer/ledger.post/動態 SQL/狀態躍遷

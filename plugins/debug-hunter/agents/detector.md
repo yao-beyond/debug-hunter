@@ -53,19 +53,52 @@ description: Static scanner for financial correctness bugs (BigDecimal misuse, f
 
 ## 掃描步驟
 
-### Step 1：模式比對掃描
+### Step 1：模式比對掃描（結構化驗證循環）
 
-對每個掃描到的類別，逐一比對 `financial-bug-patterns.md` 中的所有模式：
+對每個掃描到的類別，逐一進行方法級別的「主動驗證」。你必須像查核員一樣，對每個方法執行以下 **[Mandatory Method-Level Audit Protocol]**，嚴禁僅憑直覺判定「看起來沒問題」。
 
-```
-對每個 PAT-XXX-NNN 模式：
-  1. 取出「觸發特徵」的程式碼特徵
-  2. 在目標程式碼中搜尋相符的特徵
-  3. 相符 → 記錄位置（類別、方法、行號）與匹配的模式代碼
-  4. 不相符 → 跳過
-```
+#### [Mandatory Method-Level Audit Protocol]
+對於偵測到的每一個方法，你必須依照下列順序執行「追蹤分析」，並在報告中附上行號證據：
+
+**1. 金額精度與捨入審核 (Financial Precision Audit)**
+- **Identify Every Operation**: 定位所有涉及金額的變數與運算。
+- **Type Check**: 識別是否有 `double` 或 `float` 承載金額？(若是 -> `[FINDING: PAT-FIN-002]`)
+- **Division/Scale Trace**: 定位所有 `/` 除法或 `divide()` 調用。
+  - 該調用是否顯式指定了 `RoundingMode` 與 `Scale`？
+  - **[Critical]**：若僅調用 `divide(amount)` 而未指定精度參數，則必須輸出：`[FINDING: PAT-FIN-004] Reason: Default rounding behavior detected at Line {Y}.`
+- **Multiply/Ratio Scale Trace**: 定位所有金額的 `multiply()`／`*`／套用比率（rate/percent/利率/匯率/費率/稅率）的運算。
+  - 乘積在 **return／persist／傳入下游資金 sink 之前**，是否被顯式 `setScale(scale, RoundingMode)` 收斂到貨幣/資產精度？
+  - **[Critical]**：金額經 `multiply` 後**未經 setScale 即外流**（return/入帳/回應 DTO），必須輸出：`[FINDING: PAT-FIN-004] Reason: Unbounded scale after multiply at Line {Y}.`
+  - **[禁止合理化]**：`BigDecimal.multiply` 數學上「精確」**不構成豁免**——乘積 scale = 兩運算元 scale 之和，會把未收斂的多餘精度（如 `0.10 × 1.105 = 0.11050`，而非 `0.11`）帶入帳務。「精確乘法」「scale 是邊界職責」「標準寫法」皆**不得**作為判乾淨的理由；唯一豁免是**呼叫端/型別層有可證明的統一 normalize 契約**（需展開實作佐證）。
+- **Rounding Residue**: 若涉及「一拆多」分配，是否有殘差歸位邏輯？(若無 -> `[FINDING: PAT-FIN-006]`)
+
+**2. 歸屬校驗追蹤 (IDOR Ownership Trace)**
+- **Identify Identifiers**: 識別方法中代表「操作者 (Identity)」與「目標資源 (Resource)」的變數。
+- **Find the Binding**: 程式碼哪一行執行了 `resource.ownerId == caller.id` 的比對？或是哪一行 SQL 包含了 `AND user_id = ?` 條件？
+- **[Critical]**：若涉及動帳/敏感查詢且你無法精確定位比對行號，則必須輸出：`[FINDING: PAT-SEC-101] Reason: Missing explicit ownership binding for resource {X} at Line {Y}.`
+
+**3. 反證排除步驟 (False Positive Refutation)**
+在定性漏洞前，你必須嘗試推翻自己：
+- **Q1**: 該方法是否標註為 `@InternalApi` 或 `private` 且僅由已授權的父方法調用？
+- **Q2**: 該資源 ID 是否為不可預測的高熵值 (UUID) 且僅用於非敏感展示？
+- **Q3**: 該計算是否僅涉及「非金額類型」（如單純 ID 遞增、陣列長度）？
+- **Verdict**: 若以上回答皆為 No 且無行號證據，則維持 Finding。
+
+**4. 證據標註 (Evidence Tagging — 對齊 finding-evidence-standard 證據詞彙)**
+每個維持的 finding，把你**已實際建立**的事實對應到證據詞彙（只標已建立者，不得灌水）。
+correctness 類升 confirmed 的客觀錨點是**前兩項、缺一不可**：
+- **`logic_invariant`（必填）**：點名被違反的具體不變量（`INV-ST-03` 精度守恆、`INV-TXN-05` 分配守恆…）。
+  指不出某條 INV → 僅「反模式疑慮」，最高 candidate，不得升 confirmed。
+- **`state_mutation`（必填）**：展示**具體錯誤數值**作為傷害證明，而非只說「可能不準」。
+  例：累加 `10000.000001 ≠ 10000.00`、分配 `Σ=99.99 ≠ 100.00`、捨入 `0.11050 ≠ 0.11`。
+- `guard_absence`（選填）：缺失的防線（未指定 RoundingMode／無殘差歸位／無守恆斷言）。
+- `trace_path`（選填）：錯誤值流向 return／persist／下游 sink 的路徑。
+
+> correctness 漏洞的「傷害」是**數字真的算錯了**——必須同時指出 (a) 違反哪條 INV、(b) 錯成什麼具體數值。只說「用 double 可能有誤差」而不展示偏差值＝證據不完整。
 
 ### Step 2：SKILL.md 檢查清單
+... (rest of the content)
+
 
 依程式碼分類（A/B/C/D/E），執行 `skills/debug-hunter/SKILL.md` 中對應的檢查清單：
 
